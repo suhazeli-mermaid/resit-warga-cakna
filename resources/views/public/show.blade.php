@@ -6,123 +6,126 @@
     <title>{{ $campaign->title }} - WARGA CAKNA</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-[#f3f4f6] min-h-screen py-10 px-4">
 
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        <a href="{{ route('home') }}" class="inline-flex items-center text-emerald-700 hover:text-emerald-900 font-semibold mb-6 text-sm">
-            &larr; Kembali ke Senarai Dana
-        </a>
+    <div class="max-w-4xl mx-auto">
+        <!-- BUTANG KEMBALI KE SENARAI DANA -->
+        <div class="mb-6">
+            <a href="{{ route('public.index') }}" class="text-[#046a38] hover:underline font-bold text-sm inline-flex items-center gap-1">
+                &larr; Kembali ke Senarai Dana
+            </a>
+        </div>
 
         @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded mb-6 text-sm">
+            <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded-xl mb-6 text-sm">
                 {{ session('error') }}
             </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Maklumat Dana -->
-            <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-5 h-fit">
-                <h2 class="text-xl font-bold text-gray-900 mb-2">{{ $campaign->title }}</h2>
-                <p class="text-xs text-emerald-700 font-bold mb-4">Anjuran WARGA CAKNA</p>
-                <p class="text-gray-600 text-sm mb-6 leading-relaxed">{{ $campaign->description }}</p>
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-xl mb-6 text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
 
-                <div class="border-t border-gray-200 pt-4">
-                    <span class="block text-xs text-gray-500 mb-1">Jumlah Terkumpul Semasa</span>
-                    <span class="text-2xl font-extrabold text-emerald-700">RM {{ number_format($campaign->collected_amount, 2) }}</span>
+        <!-- KAD UTAMA KEMPEN (PERSIS REKA BENTUK ASAL) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                {{ $campaign->title }}
+            </h1>
+
+            @if($campaign->image_url || isset($campaign->banner_image))
+                <div class="mb-6 rounded-xl overflow-hidden border border-gray-100">
+                    <img src="{{ $campaign->image_url ?? asset('storage/' . $campaign->banner_image) }}" alt="{{ $campaign->title }}" class="w-full h-64 object-cover">
                 </div>
+            @endif
+
+            <div class="text-gray-600 text-base leading-relaxed mb-8 space-y-4">
+                {!! nl2br(e($campaign->description)) !!}
             </div>
 
-            <!-- Borang Sumbangan & Login Ringkas -->
-            <div class="md:col-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="bg-emerald-800 px-6 py-4 text-white">
-                    <h3 class="text-lg font-bold">Borang Sumbangan Derma Online</h3>
-                    <p class="text-xs text-emerald-200">Isi maklumat ringkas di bawah untuk penerbitan resit rasmi.</p>
+            <div class="border-t border-gray-100 pt-6">
+                <a href="#sumbang" class="block w-full text-center bg-[#046a38] hover:bg-[#03522b] text-white font-bold py-3.5 px-6 rounded-xl transition duration-150 shadow-sm text-base">
+                    Sumbang Sekarang &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- BORANG SUMBANGAN LENGKAP (#sumbang) -->
+        <div id="sumbang" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 scroll-mt-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2 border-b pb-4">Borang Sumbangan Derma</h2>
+            <p class="text-xs text-gray-500 mb-6">Sila lengkapkan maklumat di bawah untuk menyumbang kepada <strong>{{ $campaign->title }}</strong>.</p>
+
+            <form action="{{ route('public.donate.process') }}" method="POST" class="space-y-6">
+                @csrf
+                <input type="hidden" name="campaign_id" value="{{ $campaign->slug ?? $campaign->id }}">
+                <input type="hidden" name="description" value="Sumbangan Bagi {{ $campaign->title }}">
+
+                <!-- PILIHAN PRESET JUMLAH SUMBANGAN -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Pilih Jumlah Sumbangan (RM) *</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                        <button type="button" onclick="setAmount(10)" class="amount-btn border-2 border-gray-200 rounded-xl py-2.5 font-bold text-gray-700 hover:border-[#046a38] hover:text-[#046a38] transition">RM 10</button>
+                        <button type="button" onclick="setAmount(30)" class="amount-btn border-2 border-gray-200 rounded-xl py-2.5 font-bold text-gray-700 hover:border-[#046a38] hover:text-[#046a38] transition">RM 30</button>
+                        <button type="button" onclick="setAmount(50)" class="amount-btn border-2 border-gray-200 rounded-xl py-2.5 font-bold text-gray-700 hover:border-[#046a38] hover:text-[#046a38] transition">RM 50</button>
+                        <button type="button" onclick="setAmount(100)" class="amount-btn border-2 border-gray-200 rounded-xl py-2.5 font-bold text-gray-700 hover:border-[#046a38] hover:text-[#046a38] transition">RM 100</button>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-gray-500 text-sm">RM</span>
+                        <input type="number" id="custom_amount" name="amount" step="0.01" min="1" value="{{ old('amount', 25) }}" required placeholder="Atau masukkan jumlah pilihan" class="w-full text-sm pl-10 pr-3 py-3 rounded-lg border border-gray-300 font-bold text-[#046a38] focus:outline-none focus:border-[#046a38] focus:ring-1 focus:ring-[#046a38]">
+                    </div>
                 </div>
 
-                <form action="{{ route('dana.donate', $campaign->slug) }}" method="POST" class="p-6 space-y-6">
-                    @csrf
-
-                    <!-- 1. Pilih Amaun Sumbangan -->
+                <!-- MAKLUMAT PENDERMA -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-2">1. Pilih / Masukkan Jumlah Sumbangan (RM) <span class="text-red-500">*</span></label>
-                        <div class="grid grid-cols-3 gap-3 mb-3">
-                            <button type="button" onclick="setAmount(10)" class="py-2 border border-emerald-600 text-emerald-800 font-bold rounded-lg hover:bg-emerald-50 text-sm focus:bg-emerald-700 focus:text-white transition">RM 10</button>
-                            <button type="button" onclick="setAmount(50)" class="py-2 border border-emerald-600 text-emerald-800 font-bold rounded-lg hover:bg-emerald-50 text-sm focus:bg-emerald-700 focus:text-white transition">RM 50</button>
-                            <button type="button" onclick="setAmount(100)" class="py-2 border border-emerald-600 text-emerald-800 font-bold rounded-lg hover:bg-emerald-50 text-sm focus:bg-emerald-700 focus:text-white transition">RM 100</button>
-                        </div>
-                        <input type="number" step="0.01" min="1" id="amount" name="amount" required placeholder="Atau taip jumlah lain (Contoh: 30)" class="w-full border-gray-300 rounded-lg shadow-sm border p-3 font-bold text-gray-900 focus:ring-emerald-500 focus:border-emerald-500 text-base">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Penuh *</label>
+                        <input type="text" name="donor_name" value="{{ old('donor_name') }}" placeholder="Nama penderma" required class="w-full text-sm p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#046a38] focus:ring-1 focus:ring-[#046a38]">
                     </div>
 
-                    <!-- 2. Login Ringkas / Maklumat Penderma -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-2">2. Maklumat Penderma (Untuk Resit & Akaun Login)</label>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Nama Penuh <span class="text-red-500">*</span></label>
-                                <input type="text" name="donor_name" required value="{{ Auth::check() ? Auth::user()->name : old('donor_name') }}" placeholder="Contoh: Ahmad bin Abdullah" class="w-full border-gray-300 rounded-lg border p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Alamat E-mel <span class="text-red-500">*</span></label>
-                                    <input type="email" name="donor_email" required value="{{ Auth::check() ? Auth::user()->email : old('donor_email') }}" placeholder="Contoh: penderma@gmail.com" class="w-full border-gray-300 rounded-lg border p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">No. Telefon <span class="text-red-500">*</span></label>
-                                    <input type="text" name="donor_phone" required value="{{ old('donor_phone') }}" placeholder="Contoh: 019-1234567" class="w-full border-gray-300 rounded-lg border p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-                                </div>
-                            </div>
-                        </div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">No. Telefon *</label>
+                        <input type="text" name="donor_phone" value="{{ old('donor_phone') }}" placeholder="01X-XXXXXXX" required class="w-full text-sm p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#046a38] focus:ring-1 focus:ring-[#046a38]">
                     </div>
 
-                    <!-- 3. Kaedah Bayaran -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-2">3. Pilih Kaedah Bayaran <span class="text-red-500">*</span></label>
-                        <div class="space-y-2">
-                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-emerald-50 transition">
-                                <input type="radio" name="payment_method" value="toyyibpay" checked onclick="togglePaymentFields('toyyibpay')" class="text-emerald-600 focus:ring-emerald-500">
-                                <div class="ml-3">
-                                    <span class="block font-bold text-sm text-gray-900">ToyyibPay (FPX / FPX Credit Card)</span>
-                                    <span class="block text-xs text-gray-500">Bayaran secara automatik & terus disahkan.</span>
-                                </div>
-                            </label>
-
-                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-emerald-50 transition">
-                                <input type="radio" name="payment_method" value="bank_transfer" onclick="togglePaymentFields('manual')" class="text-emerald-600 focus:ring-emerald-500">
-                                <div class="ml-3">
-                                    <span class="block font-bold text-sm text-gray-900">Pindahan Bank / Transfer Online / QR Pay</span>
-                                    <span class="block text-xs text-gray-500">Masukkan kod rujukan perbankan anda.</span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Medan Tambahan Rujukan Manual -->
-                        <div id="manual_ref_field" class="hidden mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">No. Rujukan Transaksi Bank / QR</label>
-                            <input type="text" name="payment_reference" placeholder="Contoh No. Rujukan: MBB-998811" class="w-full border-gray-300 rounded-lg border p-2.5 text-sm">
-                        </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Alamat Emel (Untuk Resit Digital)</label>
+                        <input type="email" name="donor_email" value="{{ old('donor_email') }}" placeholder="contoh@email.com" class="w-full text-sm p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#046a38] focus:ring-1 focus:ring-[#046a38]">
                     </div>
+                </div>
 
-                    <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-lg text-base shadow transition">
-                        Teruskan Ke Pembayaran &rarr;
+                <!-- KAEDAH PEMBAYARAN -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Pilih Kaedah Pembayaran *</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="toyyibpay" checked class="text-[#046a38] focus:ring-[#046a38]">
+                            <span class="ml-3 font-semibold text-sm text-gray-800">ToyyibPay (FPX / Online Banking / Credit Card)</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="qr_pay" class="text-[#046a38] focus:ring-[#046a38]">
+                            <span class="ml-3 font-semibold text-sm text-gray-800">DuitNow QR / FPX Direct Transfer</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="cash" class="text-[#046a38] focus:ring-[#046a38]">
+                            <span class="ml-3 font-semibold text-sm text-gray-800">Tunai (Deposit / Walk-in)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- BUTANG HANTAR -->
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-[#046a38] hover:bg-[#03522b] text-white font-bold py-3.5 px-6 rounded-xl transition duration-150 shadow-sm text-base">
+                        Teruskan Pembayaran Sumbangan &rarr;
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
         function setAmount(val) {
-            document.getElementById('amount').value = val;
-        }
-
-        function togglePaymentFields(type) {
-            const manualField = document.getElementById('manual_ref_field');
-            if (type === 'manual') {
-                manualField.classList.remove('hidden');
-            } else {
-                manualField.classList.add('hidden');
-            }
+            document.getElementById('custom_amount').value = val;
         }
     </script>
 
