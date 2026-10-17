@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <!-- PAPARAN STATUS AKAUN / LOGIN / REGISTER (DESKTOP) -->
+            <!-- PAPARAN STATUS AKAUN / LOGIN / REGISTER / LOGOUT (DESKTOP) -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
                     <!-- PENGGUNA SUDAH LOG MASUK -->
