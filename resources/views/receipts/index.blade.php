@@ -47,12 +47,12 @@
 
                 <!-- MESEJ NOTIFIKASI -->
                 @if(session('success'))
-                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-sm">
                         {{ session('success') }}
                     </div>
                 @endif
                 @if(session('error'))
-                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm">
                         {{ session('error') }}
                     </div>
                 @endif
@@ -72,6 +72,9 @@
                         </thead>
                         <tbody class="divide-y text-sm">
                             @forelse($receipts as $receipt)
+                                @php
+                                    $isPaid = in_array(strtolower($receipt->status ?? ''), ['completed', 'paid', 'success']);
+                                @endphp
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 font-semibold text-emerald-800 whitespace-nowrap">
                                         {{ $receipt->receipt_no }}
@@ -86,7 +89,7 @@
                                         {{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y') }}
                                     </td>
                                     <td class="p-3 text-center whitespace-nowrap">
-                                        @if($receipt->status === 'completed')
+                                        @if($isPaid)
                                             <span class="inline-flex items-center px-2.5 py-1 rounded border border-green-300 text-xs font-bold bg-green-100 text-green-800">
                                                 ✓ BERJAYA
                                             </span>
@@ -141,7 +144,7 @@
                                             </a>
 
                                             <!-- BUTANG SAHKAN (HANYA JIKA BELUM BAYAR) -->
-                                            @if($receipt->status !== 'completed')
+                                            @if(!$isPaid)
                                                 <form action="{{ route('receipts.verify', $receipt->id) }}" method="POST" class="inline" onsubmit="return confirm('Mengesahkan bayaran ini? Status akan bertukar ke BERJAYA.');">
                                                     @csrf
                                                     @method('PATCH')
