@@ -2,7 +2,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
-                <!-- LOGO WARGA CAKNA -->
+                <!-- LOGO WARGA CAKNA (KEKAL DIPAPARKAN) -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('receipts.index') }}" class="flex items-center gap-2">
                         <img src="{{ asset('images/logo-warga-cakna.png') }}" alt="WARGA CAKNA" class="h-10 w-auto">
@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <!-- PAPARAN STATUS AKAUN (DESKTOP) -->
+            <!-- PAPARAN STATUS AKAUN / LOGIN / REGISTER (DESKTOP) -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
                     <!-- PENGGUNA SUDAH LOG MASUK -->
