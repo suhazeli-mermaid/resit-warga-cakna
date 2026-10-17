@@ -10,10 +10,12 @@ class DonationReceipt extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'receipt_no',
         'donor_name',
         'donor_ic_passport',
         'donor_phone',
+        'donor_email',
         'amount',
         'payment_method',
         'payment_reference',
@@ -25,4 +27,10 @@ class DonationReceipt extends Model
         'donated_at' => 'date',
         'amount' => 'decimal:2',
     ];
+
+    // Hubungan ke User yang cipta resit
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

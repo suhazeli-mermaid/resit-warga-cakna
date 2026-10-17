@@ -19,9 +19,10 @@
         .details-table th { background-color: #046a38; color: #ffffff; padding: 8px 10px; text-align: left; font-size: 11.5px; }
         .details-table td { border: 1px solid #dddddd; padding: 10px; }
         .amount-box { background-color: #e8f5e9; border: 2px dashed #046a38; padding: 12px; text-align: right; font-size: 15px; font-weight: bold; color: #046a38; margin-bottom: 30px; border-radius: 4px; }
-        .footer-table { width: 100%; margin-top: 40px; }
-        .sig-space { text-align: center; width: 220px; }
-        .sig-line { border-bottom: 1px solid #333; margin-top: 50px; margin-bottom: 5px; }
+        .footer-table { width: 100%; margin-top: 30px; }
+        .sig-space { text-align: center; width: 220px; vertical-align: bottom; }
+        .sig-img { height: 60px; width: auto; margin: 0 auto -10px auto; display: block; }
+        .sig-line { border-bottom: 1px solid #333; margin-top: 5px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -96,6 +97,14 @@
                 * Terima kasih atas sumbangan dan keprihatinan anda bersama WARGA CAKNA.
             </td>
             <td class="sig-space">
+                @php
+                    $sigSetting = $signaturePath ?? \App\Models\Setting::where('key', 'treasurer_signature')->value('value');
+                @endphp
+                @if($sigSetting && file_exists(public_path('storage/' . $sigSetting)))
+                    <img src="{{ public_path('storage/' . $sigSetting) }}" class="sig-img" alt="Tandatangan Bendahari">
+                @else
+                    <div style="height: 50px;"></div>
+                @endif
                 <div class="sig-line"></div>
                 <strong>HJ KASMADI IBRAHIM</strong><br>
                 <small style="color: #555;">Bendahari WARGA CAKNA</small>
