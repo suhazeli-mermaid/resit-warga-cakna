@@ -6,23 +6,23 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PublicDonationController;
 
-// Halaman Awam Kempen / Portal Sumbangan
+// Halaman Utama / Portal Awam Sumbangan
 Route::get('/', [PublicDonationController::class, 'index'])->name('public.index');
 Route::get('/campaigns/{id}', [PublicDonationController::class, 'show'])->name('public.show');
 
 Route::middleware(['auth'])->group(function () {
-    
-    // Dashboard / Admin Hub
+
+    // Dashboard Utama Sistem
     Route::get('/dashboard', [DonationReceiptController::class, 'index'])->name('dashboard');
 
-    // Pengurusan Profil Pengguna
+    // Admin Hub / Pengurusan AJK & Pengguna
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
+
+    // Pengurusan Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Pengurusan AJK / Users (Admin Hub)
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
 
     // Pengurusan Resit Sumbangan
     Route::get('/receipts', [DonationReceiptController::class, 'index'])->name('receipts.index');
