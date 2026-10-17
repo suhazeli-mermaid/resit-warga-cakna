@@ -57,6 +57,48 @@ class DonationReceiptController extends Controller
     }
 
     /**
+     * Memaparkan borang cipta resit baharu.
+     */
+    public function create()
+    {
+        return view('receipts.create');
+    }
+
+    /**
+     * Menyimpan rekod resit baharu ke dalam pangkalan data.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'donor_name'     => 'required|string|max:255',
+            'donor_email'    => 'nullable|email|max:255',
+            'donor_phone'    => 'nullable|string|max:50',
+            'amount'         => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
+            'description'    => 'nullable|string',
+            'status'         => 'nullable|string|in:completed,pending,failed',
+        ]);
+
+        // Jana Nombor Resit Unik
+        $validated['receipt_no'] = 'REC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        $validated['donated_at'] = now();
+        $validated['status']     = $validated['status'] ?? 'completed';
+
+        $receipt = DonationReceipt::create($validated);
+
+        // Hantar emel resit jika emel disediakan
+        if ($receipt->donor_email) {
+            try {
+                Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
+            } catch (\Exception $e) {
+                // Teruskan proses walau emel gagal dihantar
+            }
+        }
+
+        return redirect()->route('receipts.index')->with('success', "Resit {$receipt->receipt_no} berjaya dicipta!");
+    }
+
+    /**
      * Memaparkan butiran resit tunggal.
      */
     public function show($id)
@@ -82,13 +124,13 @@ class DonationReceiptController extends Controller
         $receipt = DonationReceipt::findOrFail($id);
 
         $validated = $request->validate([
-            'donor_name' => 'required|string|max:255',
-            'donor_email' => 'nullable|email|max:255',
-            'donor_phone' => 'nullable|string|max:50',
-            'amount' => 'required|numeric|min:1',
-            'status' => 'required|in:completed,pending,failed',
+            'donor_name'     => 'required|string|max:255',
+            'donor_email'    => 'nullable|email|max:255',
+            'donor_phone'    => 'nullable|string|max:50',
+            'amount'         => 'required|numeric|min:1',
+            'status'         => 'required|in:completed,pending,failed',
             'payment_method' => 'required|string',
-            'description' => 'nullable|string',
+            'description'    => 'nullable|string',
         ]);
 
         $receipt->update($validated);
