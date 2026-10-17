@@ -2,47 +2,53 @@
 <html lang="ms">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Resit Sumbangan - <?php echo e($receipt->receipt_no); ?></title>
+    <title>Resit Rasmi Derma - <?php echo e($receipt->receipt_no); ?></title>
     <style>
         @page {
-            margin: 20px;
+            size: A4 landscape;
+            margin: 15mm;
         }
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #222222;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #1a1a1a;
             margin: 0;
             padding: 0;
             font-size: 11px;
+            line-height: 1.4;
         }
-        .receipt-box {
+        .container {
             border: 2px solid #046a38;
             padding: 20px;
             background-color: #ffffff;
+            box-sizing: border-box;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 15px;
         }
         .header-table td {
-            vertical-align: middle;
+            vertical-align: top;
+        }
+        .logo-cell {
+            width: 70px;
         }
         .logo-img {
             max-height: 65px;
             width: auto;
         }
-        .org-name {
+        .org-title {
             font-size: 13px;
             font-weight: bold;
             color: #046a38;
             text-transform: uppercase;
-            line-height: 1.3;
         }
-        .org-sub {
+        .org-details {
             font-size: 9.5px;
-            color: #555555;
+            color: #444444;
             margin-top: 2px;
         }
-        .receipt-title {
+        .receipt-badge {
             text-align: right;
             font-size: 18px;
             font-weight: bold;
@@ -51,167 +57,217 @@
         }
         .divider {
             border-top: 2px solid #046a38;
-            margin: 12px 0 16px 0;
+            margin: 10px 0 15px 0;
         }
-        .info-table {
+        .details-grid {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 15px;
         }
-        .info-table td {
-            padding: 7px 8px;
-            border-bottom: 1px solid #eeeeee;
+        .details-grid td {
+            width: 50%;
+            vertical-align: top;
+            padding-right: 15px;
         }
-        .label {
-            font-weight: bold;
-            color: #444444;
-            width: 30%;
-        }
-        .amount-box {
-            margin-top: 18px;
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            padding: 12px 15px;
-            text-align: right;
-        }
-        .amount-title {
-            font-size: 10px;
-            color: #166534;
-            font-weight: bold;
-        }
-        .amount-val {
-            font-size: 20px;
+        .section-title {
+            font-size: 11px;
             font-weight: bold;
             color: #046a38;
-            margin-top: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #046a38;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
         }
-
-        /* SEKSI BENDAHARI & TANDATANGAN */
-        .signature-section {
+        .field-table {
             width: 100%;
-            margin-top: 25px;
             border-collapse: collapse;
         }
-        .signature-section td {
+        .field-table td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+        .field-label {
+            width: 40%;
+            font-weight: bold;
+            color: #555555;
+        }
+        .field-value {
+            width: 60%;
+            color: #111111;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .items-table th {
+            background-color: #046a38;
+            color: #ffffff;
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 6px 8px;
+            text-align: left;
+            border: 1px solid #046a38;
+        }
+        .items-table td {
+            padding: 8px;
+            border: 1px solid #cccccc;
+        }
+        .amount-row {
+            background-color: #f0fdf4;
+            font-weight: bold;
+            font-size: 13px;
+            color: #046a38;
+        }
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .footer-table td {
             vertical-align: bottom;
         }
-        .sign-box {
-            width: 220px;
+        .note-text {
+            font-size: 9px;
+            color: #555555;
+            line-height: 1.3;
+        }
+        .signature-box {
             text-align: center;
+            width: 220px;
             float: right;
         }
-        .sign-line {
+        .signature-line {
             border-bottom: 1px dashed #046a38;
-            height: 45px;
+            height: 40px;
             margin-bottom: 5px;
         }
-        .treasurer-title {
-            font-size: 10px;
+        .treasurer-name {
+            font-size: 11px;
             font-weight: bold;
             color: #046a38;
             text-transform: uppercase;
         }
-        .treasurer-name {
-            font-size: 10px;
-            color: #333333;
-        }
-
-        .footer-note {
-            margin-top: 20px;
-            font-size: 9px;
-            color: #666666;
-        }
-        .footer-text {
-            margin-top: 25px;
-            font-size: 8.5px;
-            color: #777777;
-            text-align: center;
-            border-top: 1px solid #dddddd;
-            padding-top: 8px;
+        .treasurer-title {
+            font-size: 9.5px;
+            color: #444444;
         }
     </style>
 </head>
 <body>
-    <div class="receipt-box">
-        <!-- HEADER KELAB / ORGANISASI & LOGO -->
+    <div class="container">
+        <!-- HEADER -->
         <table class="header-table">
             <tr>
-                <td style="width: 15%; text-align: left;">
+                <td class="logo-cell">
                     <?php
                         $logoPath = public_path('images/logo-warga-cakna.png');
                         $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
                     ?>
                     <?php if($logoData): ?>
-                        <img src="data:image/png;base64,<?php echo e($logoData); ?>" class="logo-img" alt="Logo">
+                        <img src="data:image/png;base64,<?php echo e($logoData); ?>" class="logo-img" alt="WARGA CAKNA">
                     <?php endif; ?>
                 </td>
-                <td style="width: 55%; padding-left: 10px;">
-                    <div class="org-name">PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU</div>
-                    <div class="org-sub">(WARGA CAKNA) | Reg No: PPM-005-11-12052016</div>
-                    <div class="org-sub">B17, Taman Kirana, 21700 Kuala Berang, Terengganu</div>
+                <td style="padding-left: 10px;">
+                    <div class="org-title">PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU</div>
+                    <div class="org-details">(WARGA CAKNA) | No. PPM: PPM-001-11-12022018</div>
+                    <div class="org-details">Alamat: B17, Tingkat Atas Bangunan Kedai Taman Kirana, Batu 22, 21700 Kuala Berang, Terengganu</div>
+                    <div class="org-details">Tel: +6019-615 7606 | E-mel: wargacakna@wargacakna.org | Laman Web: www.wargacakna.org</div>
                 </td>
-                <td style="width: 30%; text-align: right;">
-                    <div class="receipt-title">RESIT RASMI</div>
+                <td style="width: 25%; text-align: right;">
+                    <div class="receipt-badge">RESIT RASMI<br>DERMA</div>
                 </td>
             </tr>
         </table>
 
         <div class="divider"></div>
 
-        <!-- BUTIRAN TRANSAKSI RESIT -->
-        <table class="info-table">
+        <!-- TWO COLUMN DETAILS -->
+        <table class="details-grid">
             <tr>
-                <td class="label">No. Resit:</td>
-                <td><strong><?php echo e($receipt->receipt_no); ?></strong></td>
-            </tr>
-            <tr>
-                <td class="label">Diterima Daripada:</td>
-                <td><strong><?php echo e($receipt->donor_name); ?></strong></td>
-            </tr>
-            <tr>
-                <td class="label">Emel / No. Telefon:</td>
-                <td><?php echo e($receipt->donor_email ?? '-'); ?> / <?php echo e($receipt->donor_phone ?? '-'); ?></td>
-            </tr>
-            <tr>
-                <td class="label">Tarikh Transaksi:</td>
-                <td><?php echo e(\Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y h:i A')); ?></td>
-            </tr>
-            <tr>
-                <td class="label">Kaedah Bayaran:</td>
-                <td><?php echo e(strtoupper(str_replace('_', ' ', $receipt->payment_method))); ?></td>
-            </tr>
-            <tr>
-                <td class="label">Tujuan / Catatan:</td>
-                <td><?php echo e($receipt->description ?? 'Sumbangan Tabung Kebajikan WARGA CAKNA'); ?></td>
-            </tr>
-        </table>
-
-        <!-- KOTAK JUMLAH BAYARAN -->
-        <div class="amount-box">
-            <div class="amount-title">JUMLAH SUMBANGAN:</div>
-            <div class="amount-val">RM <?php echo e(number_format($receipt->amount, 2)); ?></div>
-        </div>
-
-        <!-- SEKSI TANDATANGAN & BENDAHARI -->
-        <table class="signature-section">
-            <tr>
-                <td style="width: 50%;">
-                    <div class="footer-note">
-                        * Resit ini dijana secara automatik menerusi sistem komputer WARGA CAKNA.
-                    </div>
+                <!-- LEFT COLUMN -->
+                <td>
+                    <div class="section-title">DITERIMA DARIPADA:</div>
+                    <table class="field-table">
+                        <tr>
+                            <td class="field-label">Nama:</td>
+                            <td class="field-value"><strong><?php echo e($receipt->donor_name); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">No. KP / Passport:</td>
+                            <td class="field-value"><?php echo e($receipt->ic_passport ?? '-'); ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">No. Telefon:</td>
+                            <td class="field-value"><?php echo e($receipt->donor_phone ?? '-'); ?></td>
+                        </tr>
+                    </table>
                 </td>
-                <td style="width: 50%; text-align: right;">
-                    <div class="sign-box">
-                        <div class="sign-line"></div>
-                        <div class="treasurer-title">BENDAHARI HONORAIS</div>
-                        <div class="treasurer-name">Persatuan Prihatin Warga Terpinggir Terengganu</div>
-                    </div>
+
+                <!-- RIGHT COLUMN -->
+                <td style="padding-right: 0; padding-left: 15px;">
+                    <div class="section-title">BUTIRAN RESIT:</div>
+                    <table class="field-table">
+                        <tr>
+                            <td class="field-label">No. Resit:</td>
+                            <td class="field-value"><strong><?php echo e($receipt->receipt_no); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">Tarikh Sumbangan:</td>
+                            <td class="field-value"><?php echo e(\Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y')); ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">Kaedah Bayaran:</td>
+                            <td class="field-value"><?php echo e(strtoupper(str_replace('_', ' ', $receipt->payment_method))); ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">No. Rujukan:</td>
+                            <td class="field-value"><?php echo e($receipt->reference_no ?? '-'); ?></td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
 
-        <div class="footer-text">
-            Terima kasih atas sumbangan ikhlas anda. Sebarang pertanyaan sila hubungi Urusetia WARGA CAKNA (+6019-615 7606).
-        </div>
+        <!-- ITEMS & AMOUNT TABLE -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 75%;">Keterangan / Tujuan Sumbangan</th>
+                    <th style="width: 25%; text-align: right;">Jumlah (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><?php echo e($receipt->description ?? 'Sumbangan Tabung Kebajikan WARGA CAKNA'); ?></td>
+                    <td style="text-align: right;"><?php echo e(number_format($receipt->amount, 2)); ?></td>
+                </tr>
+                <tr class="amount-row">
+                    <td style="text-align: right; text-transform: uppercase;">JUMLAH DITERIMA:</td>
+                    <td style="text-align: right;">RM <?php echo e(number_format($receipt->amount, 2)); ?></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- FOOTER & SIGNATURE -->
+        <table class="footer-table">
+            <tr>
+                <td style="width: 60%;">
+                    <div class="note-text">
+                        * Resit ini dijana secara komputer dan sah tanpa cetakan fizikal sekiranya dikeluarkan secara digital.<br>
+                        Terima kasih atas sumbangan dan keprihatinan anda bersama WARGA CAKNA.
+                    </div>
+                </td>
+                <td style="width: 40%; text-align: right;">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <div class="treasurer-name">HJ KASMADI IBRAHIM</div>
+                        <div class="treasurer-title">Bendahari WARGA CAKNA</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html><?php /**PATH C:\xampp\htdocs\sistem-resit-dana\resources\views/pdf/donation-receipt.blade.php ENDPATH**/ ?>
