@@ -4,37 +4,24 @@ namespace App\Mail;
 
 use App\Models\DonationReceipt;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DonationReceiptMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Instance resit sumbangan.
-     *
-     * @var \App\Models\DonationReceipt
-     */
     public $receipt;
 
-    /**
-     * Cipta instance mesej baharu.
-     *
-     * @param  \App\Models\DonationReceipt  $receipt
-     * @return void
-     */
     public function __construct(DonationReceipt $receipt)
     {
         $this->receipt = $receipt;
     }
 
-    /**
-     * Dapatkan sampul surat mesej (Envelope).
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -42,9 +29,6 @@ class DonationReceiptMail extends Mailable
         );
     }
 
-    /**
-     * Dapatkan definisi kandungan mesej (Content).
-     */
     public function content(): Content
     {
         return new Content(
@@ -56,21 +40,15 @@ class DonationReceiptMail extends Mailable
     }
 
     /**
-     * Dapatkan lampiran untuk mesej (Attachments).
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * Melampirkan fail PDF Resit secara automatik dalam emel.
      */
     public function attachments(): array
     {
-        return [];
-    }
+        $pdf = Pdf::loadView('pdf.donation-receipt', ['receipt' => $this->receipt]);
 
-    /**
-     * Sokongan kaedah build() legacy untuk versi Laravel terdahulu.
-     */
-    public function build()
-    {
-        return $this->subject("Resit Sumbangan WARGA CAKNA [{$this->receipt->receipt_no}]")
-                    ->view('emails.receipt');
+        return [
+            Attachment::fromData(fn () => $pdf->output(), "Resit-Sumbangan-{$this->receipt->receipt_no}.pdf")
+                ->withMime('application/pdf'),
+        ];
     }
 }

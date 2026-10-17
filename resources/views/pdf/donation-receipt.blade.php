@@ -2,115 +2,182 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Resit Rasmi Derma - WARGA CAKNA</title>
+    <title>Resit Sumbangan - {{ $receipt->receipt_no }}</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #222; margin: 0; padding: 15px; font-size: 12px; }
-        .header-table { width: 100%; border-bottom: 3px solid #046a38; padding-bottom: 12px; margin-bottom: 20px; }
-        .logo-img { width: 95px; height: auto; }
-        .org-details { padding-left: 12px; }
-        .org-name { font-size: 15px; font-weight: bold; color: #046a38; text-transform: uppercase; margin: 0; }
-        .org-sub { font-size: 10.5px; color: #444; margin-top: 3px; line-height: 1.4; }
-        .receipt-title-container { text-align: right; vertical-align: top; }
-        .receipt-badge { background-color: #fdd835; color: #000; padding: 6px 12px; font-weight: bold; font-size: 13px; border-radius: 4px; display: inline-block; border: 1px solid #d4ac0d; }
-        .info-table { width: 100%; margin-bottom: 20px; }
-        .info-box { width: 48%; vertical-align: top; }
-        .info-card { background-color: #f8f9fa; border: 1px solid #e0e0e0; padding: 10px 12px; border-radius: 4px; line-height: 1.6; }
-        .details-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-        .details-table th { background-color: #046a38; color: #ffffff; padding: 8px 10px; text-align: left; font-size: 11.5px; }
-        .details-table td { border: 1px solid #dddddd; padding: 10px; }
-        .amount-box { background-color: #e8f5e9; border: 2px dashed #046a38; padding: 12px; text-align: right; font-size: 15px; font-weight: bold; color: #046a38; margin-bottom: 30px; border-radius: 4px; }
-        .footer-table { width: 100%; margin-top: 30px; }
-        .sig-space { text-align: center; width: 220px; vertical-align: bottom; }
-        .sig-img { height: 60px; width: auto; margin: 0 auto -10px auto; display: block; }
-        .sig-line { border-bottom: 1px solid #333; margin-top: 5px; margin-bottom: 5px; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+            font-size: 13px;
+        }
+        .container {
+            border: 2px solid #046a38;
+            padding: 25px;
+            position: relative;
+            background-color: #ffffff;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .title-main {
+            font-size: 16px;
+            font-weight: bold;
+            color: #046a38;
+            text-transform: uppercase;
+        }
+        .title-sub {
+            font-size: 11px;
+            color: #555555;
+        }
+        .receipt-badge {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+            color: #046a38;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .info-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555555;
+            width: 35%;
+        }
+        .amount-box {
+            margin-top: 25px;
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            text-align: right;
+        }
+        .amount-label {
+            font-size: 12px;
+            color: #166534;
+            font-weight: bold;
+        }
+        .amount-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #046a38;
+        }
+        
+        /* WATERMARK / TAG STATUS BAYARAN */
+        .status-stamp {
+            position: absolute;
+            top: 220px;
+            right: 40px;
+            padding: 10px 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            text-transform: uppercase;
+            transform: rotate(-10deg);
+            opacity: 0.85;
+        }
+        .status-success {
+            color: #15803d;
+            border: 3px solid #15803d;
+            background-color: #dcfce7;
+        }
+        .status-pending {
+            color: #b91c1c;
+            border: 3px solid #b91c1c;
+            background-color: #fee2e2;
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            font-size: 10px;
+            color: #777777;
+            text-align: center;
+            border-top: 1px solid #dddddd;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
 
-    <table class="header-table">
-        <tr>
-            <td style="width: 95px; vertical-align: middle;">
-                <img src="{{ public_path('images/logo-warga-cakna.png') }}" class="logo-img" alt="Logo WARGA CAKNA">
-            </td>
-            <td class="org-details" style="vertical-align: middle;">
-                <div class="org-name">Persatuan Prihatin Warga Terpinggir Terengganu</div>
-                <div style="font-weight: bold; color: #d32f2f; font-size: 11px;">(WARGA CAKNA)</div>
-                <div class="org-sub">
-                    <strong>No. PPM:</strong> PPM-001-11-12022018<br>
-                    <strong>Alamat:</strong> B17, Tingkat Atas Bangunan Kedai Taman Kirana, Batu 22, 21700 Kuala Berang, Terengganu<br>
-                    <strong>Tel:</strong> +6019-615 7606 | <strong>E-mel:</strong> wargacakna@wargacakna.org<br>
-                    <strong>Laman Web:</strong> www.wargacakna.org
-                </div>
-            </td>
-            <td class="receipt-title-container">
-                <div class="receipt-badge">RESIT RASMI DERMA</div>
-            </td>
-        </tr>
-    </table>
+        <!-- TAG WATERMARK STATUS -->
+        @if($receipt->status === 'completed')
+            <div class="status-stamp status-success">
+                ✓ BAYAR / BERJAYA
+            </div>
+        @else
+            <div class="status-stamp status-pending">
+                ✕ BELUM SELESAI BAYARAN
+            </div>
+        @endif
 
-    <table class="info-table">
-        <tr>
-            <td class="info-box">
-                <div class="info-card">
-                    <strong style="color: #046a38;">DITERIMA DARIPADA:</strong><br>
-                    <strong>Nama:</strong> {{ $receipt->donor_name }}<br>
-                    <strong>No. KP / Passport:</strong> {{ $receipt->donor_ic_passport ?? '-' }}<br>
-                    <strong>No. Telefon:</strong> {{ $receipt->donor_phone ?? '-' }}
-                </div>
-            </td>
-            <td style="width: 4%;"></td>
-            <td class="info-box">
-                <div class="info-card">
-                    <strong style="color: #046a38;">BUTIRAN RESIT:</strong><br>
-                    <strong>No. Resit:</strong> {{ $receipt->receipt_no }}<br>
-                    <strong>Tarikh Sumbangan:</strong> {{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y') }}<br>
-                    <strong>Kaedah Bayaran:</strong> {{ strtoupper($receipt->payment_method) }}<br>
-                    <strong>No. Rujukan:</strong> {{ $receipt->payment_reference ?? '-' }}
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <table class="details-table">
-        <thead>
+        <!-- HEADER LOGO & INFO -->
+        <table class="header-table">
             <tr>
-                <th style="width: 70%;">Keterangan / Tujuan Sumbangan</th>
-                <th style="text-align: right; width: 30%;">Jumlah (RM)</th>
+                <td>
+                    <div class="title-main">PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU</div>
+                    <div class="title-sub">(WARGA CAKNA) | Reg No: PPM-005-11-12052016</div>
+                    <div class="title-sub">B17, Taman Kirana, 21700 Kuala Berang, Terengganu</div>
+                </td>
+                <td class="receipt-badge">
+                    RESIT RASMI
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ $receipt->description ?? 'Sumbangan Dana Tabung Kebajikan & Bantuan Warga Terpinggir' }}</td>
-                <td style="text-align: right; font-weight: bold;">{{ number_format($receipt->amount, 2) }}</td>
-            </tr>
-        </tbody>
-    </table>
+        </table>
 
-    <div class="amount-box">
-        JUMLAH DITERIMA: RM {{ number_format($receipt->amount, 2) }}
+        <hr style="border: 0; border-top: 2px solid #046a38;">
+
+        <!-- BUTIRAN TRANSAKSI -->
+        <table class="info-table">
+            <tr>
+                <td class="info-label">No. Resit:</td>
+                <td><strong>{{ $receipt->receipt_no }}</strong></td>
+            </tr>
+            <tr>
+                <td class="info-label">Diterima Daripada:</td>
+                <td>{{ $receipt->donor_name }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Emel / Telefon:</td>
+                <td>{{ $receipt->donor_email ?? '-' }} / {{ $receipt->donor_phone ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Tarikh Bayaran:</td>
+                <td>{{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y h:i A') }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Kaedah Bayaran:</td>
+                <td>{{ strtoupper(str_replace('_', ' ', $receipt->payment_method)) }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Tujuan / Catatan:</td>
+                <td>{{ $receipt->description ?? 'Sumbangan Tabung Kebajikan WARGA CAKNA' }}</td>
+            </tr>
+        </table>
+
+        <!-- KOTAK JUMLAH BAYARAN -->
+        <div class="amount-box">
+            <div class="amount-label">JUMLAH SUMBANGAN:</div>
+            <div class="amount-value">RM {{ number_format($receipt->amount, 2) }}</div>
+        </div>
+
+        <div style="margin-top: 30px; font-size: 11px; color: #444;">
+            * Resit ini dijana secara komputer. Tiada tandatangan fizikal diperlukan.
+        </div>
+
+        <div class="footer-note">
+            Terima kasih atas sumbangan murni anda. Sebarang pertanyaan sila hubungi Urusetia WARGA CAKNA (+6019-615 7606).
+        </div>
     </div>
-
-    <table class="footer-table">
-        <tr>
-            <td style="vertical-align: bottom; color: #666; font-size: 10px; width: 60%;">
-                * Resit ini dijana secara komputer dan sah tanpa cetakan fizikal sekiranya dikeluarkan secara digital.<br>
-                * Terima kasih atas sumbangan dan keprihatinan anda bersama WARGA CAKNA.
-            </td>
-            <td class="sig-space">
-                @php
-                    $sigSetting = $signaturePath ?? \App\Models\Setting::where('key', 'treasurer_signature')->value('value');
-                @endphp
-                @if($sigSetting && file_exists(public_path('storage/' . $sigSetting)))
-                    <img src="{{ public_path('storage/' . $sigSetting) }}" class="sig-img" alt="Tandatangan Bendahari">
-                @else
-                    <div style="height: 50px;"></div>
-                @endif
-                <div class="sig-line"></div>
-                <strong>HJ KASMADI IBRAHIM</strong><br>
-                <small style="color: #555;">Bendahari WARGA CAKNA</small>
-            </td>
-        </tr>
-    </table>
-
 </body>
 </html>
