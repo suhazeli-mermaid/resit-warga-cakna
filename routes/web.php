@@ -23,7 +23,7 @@ Route::post('/payment/callback', [PublicDonationController::class, 'paymentCallb
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes (Dashboard Redirects to Receipts List)
+| Authenticated User Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
@@ -53,9 +53,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
 
-    // Homepage Content Management
+    // Pengurusan Muka Depan & Tandatangan Bendahari
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');
-    Route::put('/admin/homepage', [HomepageContentController::class, 'update'])->name('admin.homepage.update');
+    Route::put('/admin/campaigns/{id}', [HomepageContentController::class, 'updateCampaign'])->name('admin.campaigns.update');
+    Route::post('/admin/signature', [HomepageContentController::class, 'uploadSignature'])->name('admin.upload-signature');
 
 });
 

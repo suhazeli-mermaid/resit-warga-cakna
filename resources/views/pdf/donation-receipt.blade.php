@@ -138,9 +138,17 @@
             width: 220px;
             float: right;
         }
+        .signature-img {
+            max-height: 45px;
+            width: auto;
+            margin-bottom: -10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
         .signature-line {
             border-bottom: 1px dashed #046a38;
-            height: 40px;
+            height: 35px;
             margin-bottom: 5px;
         }
         .treasurer-name {
@@ -250,7 +258,7 @@
             </tbody>
         </table>
 
-        <!-- FOOTER & SIGNATURE -->
+        <!-- FOOTER & SIGNATURE BENDAHARI -->
         <table class="footer-table">
             <tr>
                 <td style="width: 60%;">
@@ -261,6 +269,15 @@
                 </td>
                 <td style="width: 40%; text-align: right;">
                     <div class="signature-box">
+                        @php
+                            $sigSetting = \App\Models\Setting::where('key', 'treasurer_signature')->value('value');
+                        @endphp
+                        @if($sigSetting && file_exists(public_path('storage/' . $sigSetting)))
+                            @php
+                                $sigData = base64_encode(file_get_contents(public_path('storage/' . $sigSetting)));
+                            @endphp
+                            <img src="data:image/png;base64,{{ $sigData }}" class="signature-img" alt="Tandatangan Bendahari">
+                        @endif
                         <div class="signature-line"></div>
                         <div class="treasurer-name">HJ KASMADI IBRAHIM</div>
                         <div class="treasurer-title">Bendahari WARGA CAKNA</div>
