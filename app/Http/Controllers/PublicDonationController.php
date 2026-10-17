@@ -164,8 +164,8 @@ $baseUrl      = config('services.toyyibpay.base_url', 'https://toyyibpay.com');
             ->with('success', 'Sumbangan anda telah direkodkan. Urusetia kami akan mengesahkan transaksi anda untuk pengeluaran resit rasmi.');
     }
 
-    /**
-     * ToyyibPay Return URL (Pengubahan Hala Pelayar Penderma)
+/**
+     * ToyyibPay Return URL (Donor Browser Redirect)
      */
     public function paymentReturn(Request $request)
     {
@@ -173,8 +173,21 @@ $baseUrl      = config('services.toyyibpay.base_url', 'https://toyyibpay.com');
         $billCode = $request->query('billcode');
         $orderId  = $request->query('order_id');
 
-        $receipt = DonationReceipt::where('reference_no', $billCode)
-            ->orWhere('receipt_no', $orderId)
+        // Semakan selamat bagi menyokong pelbagai nama lajur pangkalan data
+        $receipt = DonationReceipt::where('receipt_no', $orderId)
+            ->orWhere(function ($query) use ($billCode) {
+                if ($billCode) {
+                    $query->when(\Schema::hasColumn('donation_receipts', 'reference_no'), function ($q) use ($billCode) {
+                        $q->where('reference_no', $billCode);
+                    })
+                    ->when(\Schema::hasColumn('donation_receipts', 'payment_reference'), function ($q) use ($billCode) {
+                        $q->orWhere('payment_reference', $billCode);
+                    })
+                    ->when(\Schema::hasColumn('donation_receipts', 'toyyibpay_bill_code'), function ($q) use ($billCode) {
+                        $q->orWhere('toyyibpay_bill_code', $billCode);
+                    });
+                }
+            })
             ->first();
 
         if ($receipt && $statusId == '1') {
@@ -187,9 +200,7 @@ $baseUrl      = config('services.toyyibpay.base_url', 'https://toyyibpay.com');
                 if ($receipt->donor_email) {
                     try {
                         Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
-                    } catch (\Exception $e) {
-                        Log::warning('Gagal menghantar emel resit: ' . $e->getMessage());
-                    }
+                    } catch (\Exception $e) {}
                 }
             }
 
@@ -210,8 +221,20 @@ $baseUrl      = config('services.toyyibpay.base_url', 'https://toyyibpay.com');
         $status   = $request->input('status');
         $orderId  = $request->input('order_id');
 
-        $receipt = DonationReceipt::where('reference_no', $billCode)
-            ->orWhere('receipt_no', $orderId)
+        $receipt = DonationReceipt::where('receipt_no', $orderId)
+            ->orWhere(function ($query) use ($billCode) {
+                if ($billCode) {
+                    $query->when(\Schema::hasColumn('donation_receipts', 'reference_no'), function ($q) use ($billCode) {
+                        $q->where('reference_no', $billCode);
+                    })
+                    ->when(\Schema::hasColumn('donation_receipts', 'payment_reference'), function ($q) use ($billCode) {
+                        $q->orWhere('payment_reference', $billCode);
+                    })
+                    ->when(\Schema::hasColumn('donation_receipts', 'toyyibpay_bill_code'), function ($q) use ($billCode) {
+                        $q->orWhere('toyyibpay_bill_code', $billCode);
+                    });
+                }
+            })
             ->first();
 
         if ($receipt && $status == '1') {
