@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -33,6 +21,23 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | ToyyibPay Direct Live API & Bank Credentials
+    |--------------------------------------------------------------------------
+    */
+    'toyyibpay' => [
+        'secret_key'    => env('kxmduu2g-7zzc-uysd-qry2-sk1fthtje5g8'),
+        'category_code' => env('s12aui8d'),
+        'base_url'      => 'https://toyyibpay.com', // LIVE ONLY
+    ],
+
+    'bank' => [
+        'name'          => 'Maybank Islamic',
+        'account_no'    => '563037065007',
+        'account_holder'=> 'PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU',
     ],
 
 ];

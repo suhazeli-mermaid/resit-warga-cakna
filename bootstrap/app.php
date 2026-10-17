@@ -11,12 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Pengecualian CSRF untuk Callback Bayaran & Pindahan Bank
         $middleware->validateCsrfTokens(except: [
-            'toyyibpay/callback',
-            'toyyibpay/return',
-            'dana/*/donate',
-            'receipts',
+            'payment/callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
