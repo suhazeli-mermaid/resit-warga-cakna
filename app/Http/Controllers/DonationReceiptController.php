@@ -79,19 +79,17 @@ class DonationReceiptController extends Controller
             'status'         => 'nullable|string|in:completed,pending,failed',
         ]);
 
-        // Jana Nombor Resit Unik
         $validated['receipt_no'] = 'REC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
         $validated['donated_at'] = now();
         $validated['status']     = $validated['status'] ?? 'completed';
 
         $receipt = DonationReceipt::create($validated);
 
-        // Hantar emel resit jika emel disediakan
-        if ($receipt->donor_email) {
+        if ($receipt->donor_email && $receipt->status === 'completed') {
             try {
                 Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
             } catch (\Exception $e) {
-                // Teruskan proses walau emel gagal dihantar
+                // Teruskan proses
             }
         }
 
@@ -99,7 +97,7 @@ class DonationReceiptController extends Controller
     }
 
     /**
-     * Memaparkan butiran resit tunggal.
+     * Memaparkan meperincian resit.
      */
     public function show($id)
     {
@@ -117,7 +115,7 @@ class DonationReceiptController extends Controller
     }
 
     /**
-     * Simpan kemaskini resit.
+     * Simpan kemaskini resit (Paksa kemaskini pangkalan data).
      */
     public function update(Request $request, $id)
     {
@@ -133,20 +131,33 @@ class DonationReceiptController extends Controller
             'description'    => 'nullable|string',
         ]);
 
-        $receipt->update($validated);
+        $oldStatus = $receipt->status;
 
-        return redirect()->route('receipts.index')->with('success', 'Rekod resit berjaya dikemaskini.');
+        // Force update pangkalan data
+        $receipt->fill($validated);
+        $receipt->save();
+
+        // Hantar emel automatik jika status bertukar dari pending/failed kepada completed
+        if ($oldStatus !== 'completed' && $receipt->status === 'completed' && $receipt->donor_email) {
+            try {
+                Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
+            } catch (\Exception $e) {
+                // Ignore mail error
+            }
+        }
+
+        return redirect()->route('receipts.index')->with('success', "Rekod resit {$receipt->receipt_no} berjaya dikemaskini.");
     }
 
     /**
-     * Pengesahan manual status bayaran oleh Admin.
+     * Pengesahan manual status bayaran oleh Admin (Butang Sahkan).
      */
     public function verify($id)
     {
         $receipt = DonationReceipt::findOrFail($id);
-        $receipt->update(['status' => 'completed']);
+        $receipt->status = 'completed';
+        $receipt->save();
 
-        // Hantar emel pengesahan jika ada emel
         if ($receipt->donor_email) {
             try {
                 Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));

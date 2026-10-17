@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     /**
-     * Papar Admin Hub / Senarai Pengguna & AJK.
+     * Memaparkan Admin Hub / Senarai Pengguna & AJK.
      */
     public function index()
     {
@@ -17,7 +17,7 @@ class UserController extends Controller
     }
 
     /**
-     * Kemaskini Peranan AJK / Admin.
+     * Mengemaskini Peranan (Role) AJK / Admin.
      */
     public function updateRole(Request $request, $id)
     {
@@ -27,8 +27,10 @@ class UserController extends Controller
             'role' => 'required|in:admin,ajk,user',
         ]);
 
-        $user->update(['role' => $request->role]);
+        $user->update([
+            'role' => $request->role,
+        ]);
 
-        return redirect()->back()->with('success', "Peranan pengguna {$user->name} berjaya dikemaskini.");
+        return redirect()->back()->with('success', "Peranan pengguna {$user->name} berjaya dikemaskini kepada [" . strtoupper($request->role) . "].");
     }
 }
