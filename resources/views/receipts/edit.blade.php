@@ -12,7 +12,7 @@
                 <div class="mb-6 border-b pb-4 flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Borang Kemaskini Resit</h3>
-                        <p class="text-xs text-gray-500">Kemaskini maklumat penderma, jumlah, atau status bayaran.</p>
+                        <p class="text-xs text-gray-500">Kemaskini maklumat penderma, tarikh, jumlah, atau status bayaran.</p>
                     </div>
                     <a href="{{ route('receipts.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1.5 px-4 rounded text-xs transition">
                         &larr; Kembali ke Senarai
@@ -53,6 +53,12 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase mb-1">No. Telefon</label>
                             <input type="text" name="donor_phone" value="{{ old('donor_phone', $receipt->donor_phone) }}" class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+
+                        <!-- TARIKH SUMBANGAN -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tarikh Sumbangan *</label>
+                            <input type="date" name="donated_at" value="{{ old('donated_at', \Carbon\Carbon::parse($receipt->donated_at)->format('Y-m-d')) }}" required class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                         </div>
 
                         <!-- JUMLAH (RM) -->

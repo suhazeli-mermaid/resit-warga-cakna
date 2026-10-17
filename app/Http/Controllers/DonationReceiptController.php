@@ -77,10 +77,13 @@ class DonationReceiptController extends Controller
             'payment_method' => 'required|string',
             'description'    => 'nullable|string',
             'status'         => 'nullable|string|in:completed,pending,failed',
+            'donated_at'     => 'nullable|date',
         ]);
 
         $validated['receipt_no'] = 'REC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-        $validated['donated_at'] = now();
+        
+        // Guna tarikh dari borang jika ada, jika tiada guna tarikh semasa
+        $validated['donated_at'] = $request->filled('donated_at') ? $request->donated_at : now();
         $validated['status']     = $validated['status'] ?? 'completed';
 
         $receipt = DonationReceipt::create($validated);
@@ -89,7 +92,7 @@ class DonationReceiptController extends Controller
             try {
                 Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
             } catch (\Exception $e) {
-                // Teruskan proses
+                // Teruskan
             }
         }
 
@@ -129,14 +132,19 @@ class DonationReceiptController extends Controller
             'status'         => 'required|in:completed,pending,failed',
             'payment_method' => 'required|string',
             'description'    => 'nullable|string',
+            'donated_at'     => 'nullable|date',
         ]);
 
         $oldStatus = $receipt->status;
 
+        // Jika tarikh dihantar dalam borang, kemaskini tarikh tersebut
+        if ($request->filled('donated_at')) {
+            $validated['donated_at'] = $request->donated_at;
+        }
+
         $receipt->fill($validated);
         $receipt->save();
 
-        // Hantar emel jika status bertukar kepada completed
         if ($oldStatus !== 'completed' && $receipt->status === 'completed' && $receipt->donor_email) {
             try {
                 Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
