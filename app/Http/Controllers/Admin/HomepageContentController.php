@@ -7,6 +7,7 @@ use App\Models\Campaign;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class HomepageContentController extends Controller
 {
@@ -34,12 +35,58 @@ class HomepageContentController extends Controller
             'image'         => 'nullable|image|mimes:jpeg,jpg,png,webp|max:3072',
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($campaign->image_path && Storage::disk('public')->exists($campaign->image_path)) {
-                Storage::disk('public')->delete($campaign->image_path);
-            }
-            $validated['image_path'] = $request->file('image')->store('campaigns', 'public');
-        }
+        
+if ($request->hasFile('image')) {
+    $file = $request->file('image');
+    $disk = Storage::disk('public');
+
+    // Kekalkan nama asal, tetapi bersihkan aksara
+    // yang tidak sesuai untuk nama fail.
+    $originalName = pathinfo(
+        $file->getClientOriginalName(),
+        PATHINFO_FILENAME
+    );
+
+    $name = Str::of($originalName)
+        ->replaceMatches('/[^\pL\pN._ -]+/u', '-')
+        ->trim(' .-_')
+        ->limit(100, '');
+
+    $name = (string) $name;
+
+    if ($name === '') {
+        $name = 'gambar-kempen';
+    }
+
+    // Sambungan berdasarkan jenis fail yang disahkan,
+    // bukan semata-mata sambungan asal pengguna.
+    $extension = strtolower($file->extension());
+
+    $filename = $name . '.' . $extension;
+    $counter = 2;
+
+    // Elakkan menimpa fail yang sudah wujud.
+    while ($disk->exists('campaigns/' . $filename)) {
+        $filename = $name . '-' . $counter . '.' . $extension;
+        $counter++;
+    }
+
+    // Simpan gambar baharu dahulu.
+    $newPath = $file->storeAs(
+        'campaigns',
+        $filename,
+        'public'
+    );
+
+    if (!$newPath) {
+        throw new \RuntimeException(
+            'Gagal menyimpan gambar kempen.'
+        );
+    }
+
+    $validated['image_path'] = $newPath;
+}
+
 
         $campaign->update($validated);
 

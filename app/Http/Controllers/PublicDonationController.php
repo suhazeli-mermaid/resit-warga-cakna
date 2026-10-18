@@ -31,6 +31,43 @@ class PublicDonationController extends Controller
         return view('public.show', compact('campaign'));
     }
 
+    /**
+     * Halaman Maklumat Lanjut Kempen
+     * Profil, Timeline, Galeri dan YouTube.
+     */
+    public function information($slug)
+    {
+        $campaign = Campaign::where('slug', $slug)
+            ->orWhere('id', $slug)
+            ->firstOrFail();
+
+        abort_unless($campaign->is_active !== false, 404);
+
+        $detail = \App\Models\CampaignDetail::where(
+            'campaign_id',
+            $campaign->id
+        )
+            ->where('is_published', true)
+            ->first();
+
+        $updates = \App\Models\CampaignUpdate::where(
+            'campaign_id',
+            $campaign->id
+        )
+            ->where('is_published', true)
+            ->with(['media' => function ($query) {
+                $query->where('is_published', true)
+                    ->orderBy('sort_order');
+            }])
+            ->orderByDesc('activity_date')
+            ->get();
+
+        return view(
+            'public.campaign-information',
+            compact('campaign', 'detail', 'updates')
+        );
+    }
+
     public function processDonation(Request $request)
     {
         $validated = $request->validate([

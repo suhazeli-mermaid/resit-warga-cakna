@@ -71,9 +71,22 @@
                                 </div>
                             </div>
 
-                            <a href="{{ route('dana.show', $campaign->slug ?? $campaign->id) }}" class="block w-full text-center bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-xl shadow-sm text-sm transition">
-                                Sumbang Sekarang &rarr;
-                            </a>
+                            
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+    
+<a href="{{ route('dana.information', $campaign->slug ?? $campaign->id) }}"
+   class="block w-full text-center border-2 border-emerald-800 text-emerald-800 hover:bg-emerald-50 font-bold py-3 rounded-xl text-sm transition">
+    Lihat Maklumat
+</a>
+
+    <a href="{{ route('dana.show', $campaign->slug ?? $campaign->id) }}#sumbang"
+       class="block w-full text-center bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-xl shadow-sm text-sm transition">
+        Sumbang Sekarang &rarr;
+    </a>
+
+</div>
+
                         </div>
                     </div>
                 @empty

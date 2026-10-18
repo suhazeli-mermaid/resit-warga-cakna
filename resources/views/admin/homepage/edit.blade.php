@@ -55,6 +55,12 @@
                 <div class="border-b pb-3 mb-4 flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">2. Senarai Kempen & Dana Terbuka (Kemaskini Banner, Caption & Sasaran)</h3>
+                        
+<a href="{{ route('admin.cms.create') }}"
+   class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-3 rounded-lg text-sm transition whitespace-nowrap">
+    + Tambah Kempen Baharu
+</a>
+
                         <p class="text-xs text-gray-500">Kemaskini poster/gambar, penerangan (*caption*), dan sasaran kutipan untuk setiap kempen yang dipaparkan pada muka depan.</p>
                     </div>
                 </div>
@@ -109,11 +115,21 @@
                                             </div>
                                         </div>
 
-                                        <div class="flex justify-end pt-2">
-                                            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-5 rounded text-xs shadow transition">
-                                                Simpan Kemaskini Kempen
-                                            </button>
-                                        </div>
+                                        
+<div class="flex flex-wrap justify-end gap-3 pt-2">
+
+    <a href="{{ route('admin.cms.edit', $campaign->id) }}"
+       class="inline-flex items-center justify-center bg-white border-2 border-emerald-700 text-emerald-800 hover:bg-emerald-50 font-bold py-2 px-5 rounded text-xs transition">
+        Urus Maklumat Lanjut
+    </a>
+
+    <button type="submit"
+            class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-5 rounded text-xs shadow transition">
+        Simpan Kemaskini Kempen
+    </button>
+
+</div>
+
                                     </div>
                                 </div>
                             </form>

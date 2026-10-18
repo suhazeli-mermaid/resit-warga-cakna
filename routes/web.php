@@ -6,6 +6,7 @@ use App\Http\Controllers\DonationReceiptController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\HomepageContentController;
+use App\Http\Controllers\Admin\CampaignCmsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\HomepageContentController;
 */
 Route::get('/', [PublicDonationController::class, 'index'])->name('public.index');
 Route::get('/dana/{slug}', [PublicDonationController::class, 'show'])->name('dana.show');
+Route::get('/dana/{slug}/maklumat', [PublicDonationController::class, 'information'])->name('dana.information');
 Route::get('/campaigns/{id}', [PublicDonationController::class, 'show'])->name('public.show');
 
 // ToyyibPay Process & Callbacks
@@ -57,6 +59,56 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');
     Route::put('/admin/campaigns/{id}', [HomepageContentController::class, 'updateCampaign'])->name('admin.campaigns.update');
     Route::post('/admin/signature', [HomepageContentController::class, 'uploadSignature'])->name('admin.upload-signature');
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Campaign CMS — Admin Management
+    |--------------------------------------------------------------------------
+    | Semua fungsi CMS memerlukan authentication.
+    | Pemeriksaan role Admin turut dilaksanakan
+    | dalam CampaignCmsController.
+    */
+
+    Route::get(
+        '/admin/campaigns/create',
+        [CampaignCmsController::class, 'create']
+    )->name('admin.cms.create');
+
+    Route::post(
+        '/admin/campaigns',
+        [CampaignCmsController::class, 'store']
+    )->name('admin.cms.store');
+
+    Route::get(
+        '/admin/campaigns/{id}/manage',
+        [CampaignCmsController::class, 'edit']
+    )->name('admin.cms.edit');
+
+    Route::put(
+        '/admin/campaigns/{id}/details',
+        [CampaignCmsController::class, 'saveDetails']
+    )->name('admin.cms.details');
+
+    Route::post(
+        '/admin/campaigns/{id}/updates',
+        [CampaignCmsController::class, 'storeUpdate']
+    )->name('admin.cms.updates.store');
+
+    Route::put(
+        '/admin/campaign-updates/{id}',
+        [CampaignCmsController::class, 'updateActivity']
+    )->name('admin.cms.updates.update');
+
+    Route::post(
+        '/admin/campaigns/{id}/media',
+        [CampaignCmsController::class, 'storeMedia']
+    )->name('admin.cms.media.store');
+
+    Route::delete(
+        '/admin/campaign-media/{id}',
+        [CampaignCmsController::class, 'deleteMedia']
+    )->name('admin.cms.media.delete');
+
 
 });
 
