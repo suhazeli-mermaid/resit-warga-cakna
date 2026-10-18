@@ -2,18 +2,21 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
-                <!-- LOGO WARGA CAKNA (KEKAL DIPAPARKAN) -->
+                <!-- LOGO WARGA CAKNA -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('receipts.index') }}" class="flex items-center gap-2">
+                    <a href="{{ route('public.index') }}" class="flex items-center gap-2">
                         <img src="{{ asset('images/logo-warga-cakna.png') }}" alt="WARGA CAKNA" class="h-10 w-auto">
                         <span class="font-bold text-gray-800 text-sm hidden md:inline-block">WARGA CAKNA</span>
                     </a>
                 </div>
 
-                <!-- NAVIGATION LINKS -->
+                <!-- NAVIGATION LINKS DESKTOP -->
                 <div class="hidden space-x-6 sm:-my-px sm:ms-8 sm:flex">
+                    <x-nav-link :href="route('public.index')" :active="request()->routeIs('public.*')">
+                        {{ __('Portal Awam') }}
+                    </x-nav-link>
+
                     @auth
-                        <!-- MENU UTAMA SELEPAS LOG MASUK -->
                         <x-nav-link :href="route('receipts.index')" :active="request()->routeIs('receipts.index')">
                             {{ __('Senarai Resit') }}
                         </x-nav-link>
@@ -30,19 +33,13 @@
                                 {{ __('Pengurusan Muka Depan') }}
                             </x-nav-link>
                         @endif
-                    @else
-                        <!-- MENU PORTAL AWAM KETIKA BELUM LOG MASUK -->
-                        <x-nav-link :href="route('public.index')" :active="request()->routeIs('public.index')">
-                            {{ __('Portal Awam Sumbangan') }}
-                        </x-nav-link>
                     @endauth
                 </div>
             </div>
 
-            <!-- PAPARAN STATUS AKAUN / LOGIN / REGISTER / LOGOUT (DESKTOP) -->
+            <!-- USER MENU / AUTH BUTTONS DESKTOP -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
-                    <!-- PENGGUNA SUDAH LOG MASUK -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-white hover:text-gray-900 focus:outline-none transition">
@@ -68,7 +65,6 @@
                         </x-slot>
                     </x-dropdown>
                 @else
-                    <!-- PENGGUNA BELUM LOG MASUK (BUTANG LOGIN & REGISTER) -->
                     <div class="flex items-center space-x-3">
                         <a href="{{ route('login') }}" class="text-sm font-bold text-emerald-800 hover:text-emerald-950 px-3 py-2 transition">
                             Log Masuk
@@ -82,9 +78,9 @@
                 @endauth
             </div>
 
-            <!-- HAMBURGER (MOBILE VIEW) -->
+            <!-- HAMBURGER BUTTON MOBILE -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'inline-flex': ! open, 'hidden': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -94,9 +90,13 @@
         </div>
     </div>
 
-    <!-- RESPONSIVE MENU (MOBILE) -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <!-- RESPONSIVE MENU MOBILE -->
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-t border-gray-100">
         <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('public.index')" :active="request()->routeIs('public.*')">
+                {{ __('Portal Awam') }}
+            </x-responsive-nav-link>
+
             @auth
                 <x-responsive-nav-link :href="route('receipts.index')" :active="request()->routeIs('receipts.index')">
                     {{ __('Senarai Resit') }}
@@ -112,10 +112,6 @@
                         {{ __('Pengurusan Muka Depan') }}
                     </x-responsive-nav-link>
                 @endif
-            @else
-                <x-responsive-nav-link :href="route('public.index')" :active="request()->routeIs('public.index')">
-                    {{ __('Portal Awam Sumbangan') }}
-                </x-responsive-nav-link>
             @endauth
         </div>
 

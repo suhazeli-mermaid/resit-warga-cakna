@@ -16,14 +16,14 @@ Route::get('/', [PublicDonationController::class, 'index'])->name('public.index'
 Route::get('/dana/{slug}', [PublicDonationController::class, 'show'])->name('dana.show');
 Route::get('/campaigns/{id}', [PublicDonationController::class, 'show'])->name('public.show');
 
-// Proses Sumbangan & Integrasi ToyyibPay
+// ToyyibPay Process & Callbacks
 Route::post('/donate/process', [PublicDonationController::class, 'processDonation'])->name('public.donate.process');
 Route::get('/payment/return', [PublicDonationController::class, 'paymentReturn'])->name('payment.return');
 Route::post('/payment/callback', [PublicDonationController::class, 'paymentCallback'])->name('payment.callback');
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes
+| Authenticated User Routes (Dashboard Redirects to Receipts List)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
@@ -53,7 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
 
-    // Pengurusan Muka Depan & Tandatangan Bendahari
+    // Homepage Content Management & Signature Upload
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');
     Route::put('/admin/campaigns/{id}', [HomepageContentController::class, 'updateCampaign'])->name('admin.campaigns.update');
     Route::post('/admin/signature', [HomepageContentController::class, 'uploadSignature'])->name('admin.upload-signature');
