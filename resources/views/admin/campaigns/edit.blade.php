@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-6 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             <div class="flex flex-wrap justify-between items-center gap-3">
                 <div>
@@ -41,7 +41,7 @@
             @endif
 
             <!-- PROFIL KEMPEN -->
-            <section class="bg-white rounded-xl shadow-sm p-6">
+            <section class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h2 class="text-lg font-bold mb-4">
                     1. Maklumat Lengkap Kempen
                 </h2>
@@ -137,7 +137,7 @@
             </section>
 
             <!-- TAMBAH AKTIVITI -->
-            <section class="bg-white rounded-xl shadow-sm p-6">
+            <section class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h2 class="text-lg font-bold mb-4">
                     2. Tambah Aktiviti Timeline
                 </h2>
@@ -202,7 +202,7 @@
             </section>
 
             <!-- SENARAI TIMELINE -->
-            <section class="bg-white rounded-xl shadow-sm p-6">
+            <section class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h2 class="text-lg font-bold mb-4">
                     3. Senarai Aktiviti Program
                 </h2>

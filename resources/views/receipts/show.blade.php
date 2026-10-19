@@ -6,21 +6,21 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl p-4 sm:p-6">
 
-                <div class="mb-6 border-b pb-4 flex justify-between items-center">
+                <div class="mb-6 border-b pb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Maklumat Transaksi Resit</h3>
                         <p class="text-xs text-gray-500">Butiran penuh sumbangan dan maklumat penderma.</p>
                     </div>
-                    <div class="flex gap-2">
-                        <a href="{{ route('receipts.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1.5 px-4 rounded text-xs transition">
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        <a href="{{ route('receipts.index') }}" class="inline-flex min-h-11 items-center justify-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition">
                             &larr; Kembali ke Senarai
                         </a>
-                        <a href="{{ route('receipts.download-pdf', $receipt->id) }}" target="_blank" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1.5 px-4 rounded text-xs transition">
-                            Muat Turun PDF
-                        </a>
+                        @unless($receipt->trashed())
+                            <a href="{{ route('receipts.download-pdf', $receipt->id) }}" target="_blank" class="inline-flex min-h-11 items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-4 rounded-lg text-xs transition">Muat Turun PDF</a>
+                        @endunless
                     </div>
                 </div>
 
@@ -61,8 +61,8 @@
                                 <td class="p-3 text-gray-700">{{ strtoupper(str_replace('_', ' ', $receipt->payment_method)) }}</td>
                             </tr>
                             <tr class="border-b">
-                                <th class="p-3 text-gray-700 font-bold uppercase text-xs">Tarikh & Masa Bayaran</th>
-                                <td class="p-3 text-gray-700">{{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y h:i A') }}</td>
+                                <th class="p-3 text-gray-700 font-bold uppercase text-xs">Tarikh Sumbangan</th>
+                                <td class="p-3 text-gray-700">{{ $receipt->donation_date_label }}</td>
                             </tr>
                             <tr>
                                 <th class="p-3 text-gray-700 font-bold uppercase text-xs">Tujuan / Catatan</th>
@@ -90,11 +90,11 @@
                     </table>
                 </div>
 
-                <div class="flex justify-end gap-2">
-                    <a href="{{ route('receipts.edit', $receipt->id) }}" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-5 rounded text-xs transition">
-                        Kemaskini Resit Ini
-                    </a>
-                </div>
+                @if(Auth::user()->isAdmin() && $receipt->isPending() && ! $receipt->trashed() && ! $receipt->isArchived())
+                    <div class="flex justify-end gap-2">
+                        <a href="{{ route('receipts.edit', $receipt->id) }}" class="inline-flex min-h-11 items-center bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-5 rounded-lg text-xs transition">Kemaskini Resit Ini</a>
+                    </div>
+                @endif
 
             </div>
         </div>

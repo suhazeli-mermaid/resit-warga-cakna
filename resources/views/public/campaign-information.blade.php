@@ -21,11 +21,13 @@
                 @if($campaign->image_url)
                     <img src="{{ $campaign->image_url }}"
                          alt="{{ $campaign->title }}"
+                         loading="lazy"
+                         decoding="async"
                          class="w-full max-h-[450px] object-contain bg-gray-100">
                 @endif
 
-                <div class="p-6 md:p-10 space-y-5">
-                    <h1 class="text-3xl font-extrabold text-gray-900">
+                <div class="p-5 sm:p-6 md:p-10 space-y-5">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">
                         {{ $campaign->title }}
                     </h1>
 
@@ -59,7 +61,7 @@
 
             <!-- MAKLUMAT LENGKAP -->
             @if($detail)
-                <section class="bg-white rounded-2xl shadow-sm p-6 md:p-10 space-y-6">
+                <section class="bg-white rounded-2xl shadow-sm p-5 sm:p-6 md:p-10 space-y-6">
                     <h2 class="text-2xl font-bold text-gray-900">
                         Maklumat Lengkap Kempen
                     </h2>
@@ -110,7 +112,7 @@
             @endif
 
             <!-- TIMELINE PROGRAM -->
-            <section class="bg-white rounded-2xl shadow-sm p-6 md:p-10">
+            <section class="bg-white rounded-2xl shadow-sm p-5 sm:p-6 md:p-10">
                 <h2 class="text-2xl font-bold mb-7">
                     Perkembangan & Aktiviti Program
                 </h2>
@@ -154,7 +156,8 @@
                                                 src="{{ asset('storage/' . $item->file_path) }}"
                                                 alt="{{ $item->caption ?: $activity->title }}"
                                                 loading="lazy"
-                                                class="w-full h-44 object-cover rounded-xl border hover:opacity-90">
+                                    decoding="async"
+                                    class="w-full h-36 sm:h-44 object-cover rounded-xl border hover:opacity-90">
                                         </a>
 
                                         @if($item->caption)

@@ -48,6 +48,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/receipts/{id}', [DonationReceiptController::class, 'update'])->name('receipts.update');
     Route::patch('/receipts/{id}/verify', [DonationReceiptController::class, 'verify'])->name('receipts.verify');
     Route::patch('/receipts/{id}/reject', [DonationReceiptController::class, 'reject'])->name('receipts.reject');
+    Route::delete('/receipts/{id}', [DonationReceiptController::class, 'destroy'])->name('receipts.destroy');
+    Route::patch('/receipts/{id}/restore', [DonationReceiptController::class, 'restore'])->name('receipts.restore');
+    Route::patch('/receipts/{id}/archive', [DonationReceiptController::class, 'archive'])->name('receipts.archive');
+    Route::patch('/receipts/{id}/unarchive', [DonationReceiptController::class, 'unarchive'])->name('receipts.unarchive');
     Route::post('/receipts/{id}/resend-email', [DonationReceiptController::class, 'resendEmail'])->name('receipts.resend-email');
     Route::get('/receipts/{id}/download-pdf', [DonationReceiptController::class, 'downloadPdf'])->name('receipts.download-pdf');
     Route::get('/receipts/{id}/view-pdf', [DonationReceiptController::class, 'viewPdf'])->name('receipts.view-pdf');
@@ -58,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Homepage Content Management & Signature Upload
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');
+    Route::put('/admin/homepage/hero', [HomepageContentController::class, 'updateHero'])->name('admin.homepage.hero.update');
     Route::put('/admin/campaigns/{id}', [HomepageContentController::class, 'updateCampaign'])->name('admin.campaigns.update');
     Route::post('/admin/signature', [HomepageContentController::class, 'uploadSignature'])->name('admin.upload-signature');
 

@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html lang="ms">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $campaign->title }} - WARGA CAKNA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-[#f3f4f6] min-h-screen py-10 px-4">
-
+<x-app-layout>
+<div class="min-h-screen bg-gray-100 px-4 py-6 sm:py-10">
     <div class="max-w-4xl mx-auto">
         <!-- BUTANG KEMBALI KE SENARAI DANA -->
         <div class="mb-6">
@@ -29,8 +21,8 @@
         @endif
 
         <!-- KAD UTAMA KEMPEN -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-10 mb-8">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
                 {{ $campaign->title }}
             </h1>
 
@@ -46,7 +38,7 @@
         </div>
 
         <!-- BORANG SUMBANGAN LENGKAP (#sumbang) -->
-        <div id="sumbang" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 scroll-mt-6">
+        <div id="sumbang" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-10 scroll-mt-20">
             <h2 class="text-2xl font-bold text-gray-900 mb-2 border-b pb-4">Borang Sumbangan Derma</h2>
             <p class="text-xs text-gray-500 mb-6">Sila lengkapkan maklumat di bawah untuk menyumbang kepada <strong>{{ $campaign->title }}</strong>.</p>
 
@@ -127,13 +119,19 @@
                     <!-- DISPLAY OFFICIAL DUITNOW QR IMAGE -->
                     <div id="qr_code_box" class="hidden text-center py-2 bg-white rounded-lg border border-emerald-100">
                         <p class="text-xs font-bold text-gray-700 mb-2">Imbas Kod QR Di Bawah Untuk Pembayaran:</p>
-                        <img src="{{ asset('images/qr-pay-maybank.jpg') }}" alt="Warga Cakna DuitNow QR" class="h-64 mx-auto rounded-lg shadow-sm border">
+                        <img src="{{ asset('images/qr-pay-maybank.jpg') }}" loading="lazy" decoding="async" alt="Warga Cakna DuitNow QR" class="h-64 max-w-full mx-auto rounded-lg shadow-sm border">
                         <a href="{{ asset('images/qr-pay-maybank.jpg') }}" target="_blank" class="inline-block mt-2 text-xs text-emerald-700 underline font-bold">Lihat Paparan Penuh QR</a>
                     </div>
 
                     <div>
                         <label id="ref_label" class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombor Rujukan Transaksi *</label>
                         <input type="text" id="transaction_reference" name="transaction_reference" placeholder="Contoh: MBB12345678 / Ref No." class="w-full text-sm p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#046a38]">
+                    </div>
+
+                    <div>
+                        <label for="transaction_date" class="block text-xs font-bold text-gray-700 uppercase mb-1">Tarikh Transaksi Sebenar *</label>
+                        <input type="date" id="transaction_date" name="transaction_date" value="{{ old('transaction_date') }}" max="{{ now()->toDateString() }}" class="w-full min-h-11 text-sm p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#046a38]">
+                        <p class="mt-1 text-[11px] text-gray-500">Digunakan sebagai Tarikh Sumbangan pada resit.</p>
                     </div>
 
                     <div>
@@ -151,6 +149,7 @@
             </form>
         </div>
     </div>
+</div>
 
     <script>
         function setAmount(val) {
@@ -166,14 +165,17 @@
             const box = document.getElementById('manual_fields_box');
             const qrBox = document.getElementById('qr_code_box');
             const refInput = document.getElementById('transaction_reference');
+            const dateInput = document.getElementById('transaction_date');
             const refLabel = document.getElementById('ref_label');
 
             if (method === 'toyyibpay') {
                 box.classList.add('hidden');
                 refInput.removeAttribute('required');
+                dateInput.removeAttribute('required');
             } else {
                 box.classList.remove('hidden');
                 refInput.setAttribute('required', 'required');
+                dateInput.setAttribute('required', 'required');
 
                 if (method === 'qr_pay') {
                     qrBox.classList.remove('hidden');
@@ -193,5 +195,4 @@
         }
     </script>
 
-</body>
-</html>
+</x-app-layout>

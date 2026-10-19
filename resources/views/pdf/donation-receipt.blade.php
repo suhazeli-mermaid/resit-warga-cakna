@@ -223,7 +223,7 @@
                         </tr>
                         <tr>
                             <td class="field-label">Tarikh Sumbangan:</td>
-                            <td class="field-value">{{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y') }}</td>
+                            <td class="field-value">{{ $receipt->donation_date_label }}</td>
                         </tr>
                         <tr>
                             <td class="field-label">Kaedah Bayaran:</td>

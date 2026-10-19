@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DonationReceipt extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const STATUS_PENDING = 'pending';
 
@@ -34,6 +35,7 @@ class DonationReceipt extends Model
         'verified_by',
         'verified_at',
         'rejection_reason',
+        'archived_at',
         'donated_at',
         'description',
     ];
@@ -42,6 +44,8 @@ class DonationReceipt extends Model
         'donated_at' => 'date',
         'amount' => 'decimal:2',
         'verified_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     // Hubungan ke User yang cipta resit
@@ -55,6 +59,16 @@ class DonationReceipt extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function audits()
+    {
+        return $this->hasMany(DonationReceiptAudit::class);
+    }
+
+    public function latestAudit()
+    {
+        return $this->hasOne(DonationReceiptAudit::class)->latestOfMany();
+    }
+
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
@@ -63,6 +77,11 @@ class DonationReceipt extends Model
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
     }
 
     public function isManualPayment(): bool
@@ -96,5 +115,14 @@ class DonationReceipt extends Model
             self::STATUS_FAILED => 'border-gray-400 bg-gray-100 text-gray-800',
             default => 'border-gray-300 bg-gray-100 text-gray-700',
         };
+    }
+
+    public function getDonationDateLabelAttribute(): string
+    {
+        if ($this->donated_at === null) {
+            return 'Tarikh sumbangan belum ditetapkan';
+        }
+
+        return $this->donated_at->locale('ms')->translatedFormat('j F Y');
     }
 }

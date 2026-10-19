@@ -6,9 +6,9 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
 
                 <div class="mb-6">
                     <h3 class="text-lg font-bold text-gray-900">

@@ -6,10 +6,10 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl p-4 sm:p-6">
 
-                <div class="mb-6 border-b pb-4 flex justify-between items-center">
+                <div class="mb-6 border-b pb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Borang Kemaskini Resit</h3>
                         <p class="text-xs text-gray-500">Kemaskini maklumat penderma, tarikh dan jumlah. Status hanya berubah melalui aliran pengesahan.</p>
@@ -58,7 +58,7 @@
                         <!-- TARIKH SUMBANGAN -->
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tarikh Sumbangan *</label>
-                            <input type="date" name="donated_at" value="{{ old('donated_at', \Carbon\Carbon::parse($receipt->donated_at)->format('Y-m-d')) }}" required class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            <input type="date" name="donated_at" max="{{ now()->toDateString() }}" value="{{ old('donated_at', $receipt->donated_at?->format('Y-m-d')) }}" required class="min-h-11 w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                         </div>
 
                         <!-- JUMLAH (RM) -->

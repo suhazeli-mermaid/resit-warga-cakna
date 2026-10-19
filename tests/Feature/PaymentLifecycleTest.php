@@ -41,6 +41,7 @@ class PaymentLifecycleTest extends TestCase
         $receipt = $this->makeReceipt([
             'payment_method' => 'toyyibpay',
             'toyyibpay_bill_code' => 'bill-123',
+            'donated_at' => null,
         ]);
 
         $response = $this->post(route('payment.callback'), $this->callbackPayload($receipt));
@@ -52,6 +53,12 @@ class PaymentLifecycleTest extends TestCase
         $this->assertSame('gateway-ref-123', $receipt->payment_reference);
         $this->assertNotNull($receipt->verified_at);
         $this->assertNull($receipt->verified_by);
+        $this->assertSame(now()->toDateString(), $receipt->donated_at->toDateString());
+        $this->assertDatabaseHas('donation_receipt_audits', [
+            'donation_receipt_id' => $receipt->id,
+            'action' => 'verify',
+            'actor_type' => 'toyyibpay',
+        ]);
 
         Mail::assertSent(DonationReceiptMail::class, function (DonationReceiptMail $mail) use ($receipt) {
             return $mail->receipt->is($receipt) && $mail->hasTo($receipt->donor_email);
@@ -148,6 +155,22 @@ class PaymentLifecycleTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_toyyibpay_callback_requires_an_exact_billcode(): void
+    {
+        Mail::fake();
+        $receipt = $this->makeReceipt([
+            'payment_method' => 'toyyibpay',
+            'toyyibpay_bill_code' => 'bill-correct',
+        ]);
+        $payload = $this->callbackPayload($receipt);
+        $payload['billcode'] = 'bill-wrong';
+
+        $this->post(route('payment.callback'), $payload)->assertNotFound();
+
+        $this->assertSame(DonationReceipt::STATUS_PENDING, $receipt->fresh()->status);
+        Mail::assertNothingSent();
+    }
+
     public function test_toyyibpay_callback_requires_an_exact_receipt_order_id(): void
     {
         Mail::fake();
@@ -208,6 +231,7 @@ class PaymentLifecycleTest extends TestCase
                 'amount' => 25,
                 'payment_method' => $method,
                 'transaction_reference' => $reference,
+                'transaction_date' => '2026-07-16',
                 'description' => 'Sumbangan ujian',
             ];
 

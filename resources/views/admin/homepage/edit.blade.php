@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             <!-- MESEJ NOTIFIKASI -->
             @if(session('success'))
@@ -15,14 +15,63 @@
                 </div>
             @endif
 
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl p-4 sm:p-6">
+                <div class="border-b pb-3 mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Hero Muka Depan</h3>
+                    <p class="text-sm text-gray-500">Kandungan ini dipaparkan secara dinamik. Kosongkan atau nyahterbit untuk menyembunyikan hero.</p>
+                </div>
+                <form action="{{ route('admin.homepage.hero.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="hero_title" class="block text-sm font-bold text-gray-700">Headline</label>
+                            <input id="hero_title" name="title" value="{{ old('title', $hero->title) }}" maxlength="255" class="mt-1 min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label for="hero_subtitle" class="block text-sm font-bold text-gray-700">Subheadline ringkas</label>
+                            <input id="hero_subtitle" name="subtitle" value="{{ old('subtitle', $hero->subtitle) }}" maxlength="255" class="mt-1 min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="hero_body" class="block text-sm font-bold text-gray-700">Penerangan</label>
+                        <textarea id="hero_body" name="body" rows="3" maxlength="1000" class="mt-1 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">{{ old('body', $hero->body) }}</textarea>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="hero_cta_text" class="block text-sm font-bold text-gray-700">Teks CTA</label>
+                            <input id="hero_cta_text" name="cta_text" value="{{ old('cta_text', $hero->cta_text) }}" maxlength="80" class="mt-1 min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label for="hero_cta_link" class="block text-sm font-bold text-gray-700">Pautan CTA</label>
+                            <input id="hero_cta_link" name="cta_link" value="{{ old('cta_link', $hero->cta_link) }}" maxlength="500" placeholder="/ atau #program-aktif" class="mt-1 min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div class="grid items-end gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="hero_banner" class="block text-sm font-bold text-gray-700">Imej hero (pilihan)</label>
+                            <input id="hero_banner" type="file" name="banner_image" accept="image/jpeg,image/png,image/webp" class="mt-1 min-h-11 w-full rounded-md border border-gray-300 p-2 text-sm">
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <label class="inline-flex min-h-11 items-center gap-2">
+                                <input type="hidden" name="is_published" value="0">
+                                <input type="checkbox" name="is_published" value="1" {{ old('is_published', $hero->exists ? $hero->is_published : true) ? 'checked' : '' }} class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                <span class="text-sm font-bold text-gray-700">Terbitkan hero</span>
+                            </label>
+                            <button type="submit" class="min-h-11 rounded-lg bg-emerald-700 px-5 py-2 font-bold text-white hover:bg-emerald-800">Simpan Hero</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <!-- SEKSI 1: MUAT NAIK TANDATANGAN DIGITAL BENDAHARI -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl p-4 sm:p-6">
                 <div class="border-b pb-3 mb-4">
                     <h3 class="text-lg font-bold text-gray-900">1. Muat Naik Tandatangan Digital Bendahari</h3>
                     <p class="text-xs text-gray-500">Imej tandatangan ini akan dipaparkan secara automatik di bahagian bawah resit PDF di atas nama HJ KASMADI IBRAHIM.</p>
                 </div>
 
-                <form action="{{ route('admin.upload-signature') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 rounded-lg border">
+                <form action="{{ route('admin.upload-signature') }}" method="POST" enctype="multipart/form-data" class="flex flex-col items-stretch justify-between gap-4 bg-gray-50 p-4 rounded-lg border sm:flex-row sm:items-center">
                     @csrf
                     <div class="flex items-center space-x-4">
                         @php
@@ -41,9 +90,9 @@
                         @endif
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <input type="file" name="signature" accept="image/*" required class="text-xs text-gray-500 border border-gray-300 rounded p-1.5 bg-white">
-                        <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded text-xs transition">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <input type="file" name="signature" accept="image/*" required class="min-h-11 max-w-full text-xs text-gray-500 border border-gray-300 rounded p-1.5 bg-white">
+                        <button type="submit" class="min-h-11 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded text-xs transition">
                             Muat Naik Tandatangan
                         </button>
                     </div>

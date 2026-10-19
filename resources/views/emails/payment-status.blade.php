@@ -35,6 +35,7 @@
                 <table width="100%" style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-collapse: collapse; margin: 18px 0;">
                     <tr><td style="padding: 8px 12px; font-weight: bold;">No. Resit</td><td style="padding: 8px 12px;">{{ $receipt->receipt_no }}</td></tr>
                     <tr><td style="padding: 8px 12px; font-weight: bold;">Penderma</td><td style="padding: 8px 12px;">{{ $receipt->donor_name }}</td></tr>
+                    <tr><td style="padding: 8px 12px; font-weight: bold;">Tarikh Sumbangan</td><td style="padding: 8px 12px;">{{ $receipt->donation_date_label }}</td></tr>
                     <tr><td style="padding: 8px 12px; font-weight: bold;">Jumlah</td><td style="padding: 8px 12px;">RM {{ number_format($receipt->amount, 2) }}</td></tr>
                     <tr><td style="padding: 8px 12px; font-weight: bold;">Kaedah</td><td style="padding: 8px 12px;">{{ strtoupper(str_replace('_', ' ', $receipt->payment_method)) }}</td></tr>
                     <tr><td style="padding: 8px 12px; font-weight: bold;">Status</td><td style="padding: 8px 12px;"><strong>{{ $receipt->status_label }}</strong></td></tr>

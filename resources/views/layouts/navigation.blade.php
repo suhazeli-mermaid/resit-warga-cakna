@@ -10,7 +10,7 @@
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('public.index') }}" class="flex items-center gap-2">
                         <img src="{{ asset('images/logo-warga-cakna.png') }}" alt="WARGA CAKNA" class="h-10 w-auto">
-                        <span class="font-bold text-gray-800 text-sm hidden md:inline-block">WARGA CAKNA</span>
+                        <span class="font-bold text-gray-800 text-xs sm:text-sm leading-tight">WARGA<br class="sm:hidden"> CAKNA</span>
                     </a>
                 </div>
 
@@ -25,9 +25,11 @@
                             {{ __('Senarai Resit') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
-                            {{ __('+ Cipta Resit Baharu') }}
-                        </x-nav-link>
+                        @if(Auth::user()->isAdmin())
+                            <x-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
+                                {{ __('+ Cipta Resit Baharu') }}
+                            </x-nav-link>
+                        @endif
 
                         @if(Auth::user()->role === 'admin' || Auth::user()->role === 'ajk')
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
@@ -130,9 +132,11 @@
                 <x-responsive-nav-link :href="route('receipts.index')" :active="request()->routeIs('receipts.index')">
                     {{ __('Senarai Resit') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
-                    {{ __('+ Cipta Resit Baharu') }}
-                </x-responsive-nav-link>
+                @if(Auth::user()->isAdmin())
+                    <x-responsive-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
+                        {{ __('+ Cipta Resit Baharu') }}
+                    </x-responsive-nav-link>
+                @endif
                 @if(Auth::user()->role === 'admin' || Auth::user()->role === 'ajk')
                     <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                         {{ __('Admin Hub') }}

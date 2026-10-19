@@ -11,15 +11,13 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Tailwind CSS CDN -->
-        <script src="https://cdn.tailwindcss.com"></script>
-
         <style>[x-cloak] { display: none !important; }</style>
 
         {{-- Use the Vite bundle when it exists; keep localhost usable before Node/Vite is installed. --}}
         @if (is_file(public_path('hot')) || is_file(public_path('build/manifest.json')))
-            @vite('resources/js/app.js')
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
         @else
+            <script src="https://cdn.tailwindcss.com"></script>
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
         @endif
     </head>
@@ -37,9 +35,11 @@
             @endif
 
             <!-- Page Content -->
-            <main>
+            <main class="pb-24 sm:pb-0">
                 {{ $slot }}
             </main>
+
+            @include('layouts.mobile-bottom-navigation')
         </div>
     </body>
 </html>

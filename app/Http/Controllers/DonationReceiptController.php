@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationReceipt;
+use App\Services\DonationReceiptAuditService;
 use App\Services\PaymentNotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ class DonationReceiptController extends Controller
 {
     public function __construct(
         private PaymentNotificationService $notifications,
+        private DonationReceiptAuditService $audits,
     ) {}
 
     /**
@@ -19,7 +21,29 @@ class DonationReceiptController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DonationReceipt::query();
+        $isAdmin = $request->user()?->isAdmin() === true;
+        $filter = (string) $request->input('filter', 'all');
+        $allowedFilters = ['all', 'pending', 'completed', 'rejected', 'failed', 'archived', 'deleted'];
+
+        if (! in_array($filter, $allowedFilters, true) || (! $isAdmin && in_array($filter, ['archived', 'deleted'], true))) {
+            $filter = 'all';
+        }
+
+        $query = $filter === 'deleted' && $isAdmin
+            ? DonationReceipt::onlyTrashed()->with('latestAudit')
+            : DonationReceipt::query()->with('latestAudit');
+
+        if (! $isAdmin) {
+            $query->where('user_id', $request->user()->id)->whereNull('archived_at');
+        } elseif ($filter === 'archived') {
+            $query->whereNotNull('archived_at');
+        } elseif ($filter !== 'deleted') {
+            $query->whereNull('archived_at');
+
+            if ($filter !== 'all') {
+                $query->where('status', $filter);
+            }
+        }
 
         // Carian Kata Kunci
         if ($request->filled('search')) {
@@ -30,11 +54,6 @@ class DonationReceiptController extends Controller
                     ->orWhere('donor_email', 'like', "%{$search}%")
                     ->orWhere('donor_phone', 'like', "%{$search}%");
             });
-        }
-
-        // Tapis mengikut Status
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
         }
 
         // Isihan (Sorting)
@@ -57,14 +76,16 @@ class DonationReceiptController extends Controller
 
         $receipts = $query->paginate(15)->withQueryString();
 
-        return view('receipts.index', compact('receipts'));
+        return view('receipts.index', compact('receipts', 'filter', 'isAdmin'));
     }
 
     /**
      * Memaparkan borang cipta resit baharu.
      */
-    public function create()
+    public function create(Request $request)
     {
+        $this->ensureAdmin($request);
+
         return view('receipts.create');
     }
 
@@ -73,20 +94,21 @@ class DonationReceiptController extends Controller
      */
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
+
         $validated = $request->validate([
             'donor_name' => 'required|string|max:255',
             'donor_ic_passport' => 'nullable|string|max:255',
             'donor_email' => 'nullable|email|max:255',
             'donor_phone' => 'nullable|string|max:50',
             'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string|in:bank_transfer,online_transfer,qr_pay,cash,fpx,cheque',
+            'payment_method' => 'required|string|in:bank_transfer,online_transfer,qr_pay,cash',
             'payment_reference' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'donated_at' => 'nullable|date',
+            'donated_at' => 'required|date|before_or_equal:today',
         ]);
 
         $validated['receipt_no'] = 'REC-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
-        $validated['donated_at'] = $request->filled('donated_at') ? $request->donated_at : now();
         $validated['status'] = DonationReceipt::STATUS_PENDING;
         $validated['user_id'] = $request->user()->id;
 
@@ -100,9 +122,10 @@ class DonationReceiptController extends Controller
     /**
      * Memaparkan perincian resit tunggal.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $receipt = DonationReceipt::findOrFail($id);
+        $receipt = DonationReceipt::withTrashed()->findOrFail($id);
+        $this->ensureReceiptAccess($request, $receipt);
 
         return view('receipts.show', compact('receipt'));
     }
@@ -110,9 +133,11 @@ class DonationReceiptController extends Controller
     /**
      * Borang kemaskini resit.
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
+        $this->ensureAdmin($request);
         $receipt = DonationReceipt::findOrFail($id);
+        abort_unless($receipt->isPending() && ! $receipt->isArchived(), 409, 'Hanya transaksi pending boleh dikemas kini.');
 
         return view('receipts.edit', compact('receipt'));
     }
@@ -122,7 +147,9 @@ class DonationReceiptController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->ensureAdmin($request);
         $receipt = DonationReceipt::findOrFail($id);
+        abort_unless($receipt->isPending() && ! $receipt->isArchived(), 409, 'Hanya transaksi pending boleh dikemas kini.');
 
         $validated = $request->validate([
             'donor_name' => 'required|string|max:255',
@@ -131,13 +158,8 @@ class DonationReceiptController extends Controller
             'amount' => 'required|numeric|min:1',
             'payment_reference' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'donated_at' => 'nullable|date',
+            'donated_at' => 'required|date|before_or_equal:today',
         ]);
-
-        // Jika tarikh dihantar dalam borang, kemaskini tarikh tersebut
-        if ($request->filled('donated_at')) {
-            $validated['donated_at'] = $request->donated_at;
-        }
 
         $receipt->fill($validated);
         $receipt->save();
@@ -169,6 +191,8 @@ class DonationReceiptController extends Controller
                 'verified_at' => now(),
                 'rejection_reason' => null,
             ])->save();
+
+            $this->audits->record($receipt, 'verify', $request->user());
 
             return ['state' => 'completed', 'receipt' => $receipt->fresh()];
         });
@@ -215,6 +239,13 @@ class DonationReceiptController extends Controller
                 'rejection_reason' => $validated['rejection_reason'],
             ])->save();
 
+            $this->audits->record(
+                $receipt,
+                'reject',
+                $request->user(),
+                $validated['rejection_reason'],
+            );
+
             return ['state' => 'rejected', 'receipt' => $receipt->fresh()];
         });
 
@@ -234,9 +265,10 @@ class DonationReceiptController extends Controller
     /**
      * Hantar semula emel resit.
      */
-    public function resendEmail($id)
+    public function resendEmail(Request $request, $id)
     {
         $receipt = DonationReceipt::findOrFail($id);
+        $this->ensureReceiptAccess($request, $receipt);
 
         if (! $receipt->donor_email) {
             return redirect()->back()->with('error', 'Penderma ini tiada alamat emel.');
@@ -256,9 +288,10 @@ class DonationReceiptController extends Controller
     /**
      * Muat turun fail PDF resit.
      */
-    public function downloadPdf($id)
+    public function downloadPdf(Request $request, $id)
     {
         $receipt = DonationReceipt::findOrFail($id);
+        $this->ensureReceiptAccess($request, $receipt);
         $pdf = Pdf::loadView('pdf.donation-receipt', compact('receipt'));
 
         return $pdf->download("Resit-Sumbangan-{$receipt->receipt_no}.pdf");
@@ -267,11 +300,136 @@ class DonationReceiptController extends Controller
     /**
      * Papar PDF dalam pelayar web.
      */
-    public function viewPdf($id)
+    public function viewPdf(Request $request, $id)
     {
         $receipt = DonationReceipt::findOrFail($id);
+        $this->ensureReceiptAccess($request, $receipt);
         $pdf = Pdf::loadView('pdf.donation-receipt', compact('receipt'));
 
         return $pdf->stream("Resit-Sumbangan-{$receipt->receipt_no}.pdf");
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $this->ensureAdmin($request);
+        $validated = $request->validate([
+            'deletion_reason' => 'required|string|max:2000',
+        ]);
+
+        $result = DB::transaction(function () use ($id, $request, $validated) {
+            $receipt = DonationReceipt::query()->lockForUpdate()->findOrFail($id);
+
+            if ($receipt->isCompleted()) {
+                return ['state' => 'completed', 'receipt' => $receipt];
+            }
+
+            $this->audits->record(
+                $receipt,
+                'delete',
+                $request->user(),
+                $validated['deletion_reason'],
+            );
+            $receipt->delete();
+
+            return ['state' => 'deleted', 'receipt' => $receipt];
+        });
+
+        if ($result['state'] === 'completed') {
+            return redirect()->route('receipts.index')
+                ->with('error', 'Transaksi BERJAYA tidak boleh dihapus. Gunakan tindakan Arkibkan.');
+        }
+
+        return redirect()->route('receipts.index')
+            ->with('success', "Rekod {$result['receipt']->receipt_no} dipindahkan ke Tong Sampah.");
+    }
+
+    public function restore(Request $request, $id)
+    {
+        $this->ensureAdmin($request);
+
+        $receipt = DB::transaction(function () use ($id, $request) {
+            $receipt = DonationReceipt::onlyTrashed()->lockForUpdate()->findOrFail($id);
+            $receipt->restore();
+            $this->audits->record($receipt, 'restore', $request->user());
+
+            return $receipt;
+        });
+
+        return redirect()->route('receipts.index', ['filter' => 'deleted'])
+            ->with('success', "Rekod {$receipt->receipt_no} berjaya dipulihkan.");
+    }
+
+    public function archive(Request $request, $id)
+    {
+        $this->ensureAdmin($request);
+
+        $result = DB::transaction(function () use ($id, $request) {
+            $receipt = DonationReceipt::query()->lockForUpdate()->findOrFail($id);
+
+            if ($receipt->isArchived()) {
+                return ['state' => 'already', 'receipt' => $receipt];
+            }
+
+            if (! in_array($receipt->status, [
+                DonationReceipt::STATUS_COMPLETED,
+                DonationReceipt::STATUS_REJECTED,
+                DonationReceipt::STATUS_FAILED,
+            ], true)) {
+                return ['state' => 'invalid', 'receipt' => $receipt];
+            }
+
+            $receipt->forceFill(['archived_at' => now()])->save();
+            $this->audits->record($receipt, 'archive', $request->user());
+
+            return ['state' => 'archived', 'receipt' => $receipt];
+        });
+
+        if ($result['state'] === 'invalid') {
+            return redirect()->route('receipts.index')
+                ->with('error', 'Transaksi pending tidak boleh diarkibkan. Sahkan, tolak atau hapus rekod tersebut.');
+        }
+
+        return redirect()->route('receipts.index')
+            ->with('success', $result['state'] === 'already'
+                ? 'Rekod telah diarkibkan sebelum ini.'
+                : "Rekod {$result['receipt']->receipt_no} berjaya diarkibkan.");
+    }
+
+    public function unarchive(Request $request, $id)
+    {
+        $this->ensureAdmin($request);
+
+        $receipt = DB::transaction(function () use ($id, $request) {
+            $receipt = DonationReceipt::query()->lockForUpdate()->findOrFail($id);
+
+            if ($receipt->isArchived()) {
+                $receipt->forceFill(['archived_at' => null])->save();
+                $this->audits->record($receipt, 'unarchive', $request->user());
+            }
+
+            return $receipt;
+        });
+
+        return redirect()->route('receipts.index', ['filter' => 'archived'])
+            ->with('success', "Rekod {$receipt->receipt_no} dipulihkan daripada arkib.");
+    }
+
+    private function ensureAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->isAdmin(), 403);
+    }
+
+    private function ensureReceiptAccess(Request $request, DonationReceipt $receipt): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user?->isAdmin()
+                || (! $receipt->trashed()
+                    && ! $receipt->isArchived()
+                    && $receipt->user_id !== null
+                    && $receipt->user_id === $user?->id),
+            403,
+        );
     }
 }

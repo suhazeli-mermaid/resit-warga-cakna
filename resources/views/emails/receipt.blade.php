@@ -31,7 +31,7 @@
                     </tr>
                     <tr>
                         <td style="padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #e5e7eb; color: #555555;">Tarikh:</td>
-                        <td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb;">{{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y h:i A') }}</td>
+                        <td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb;">{{ $receipt->donation_date_label }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #e5e7eb; color: #555555;">Jumlah Sumbangan:</td>

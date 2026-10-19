@@ -6,6 +6,8 @@ use App\Models\Campaign;
 use App\Models\CampaignDetail;
 use App\Models\CampaignUpdate;
 use App\Models\DonationReceipt;
+use App\Models\HomepageContent;
+use App\Services\DonationReceiptAuditService;
 use App\Services\PaymentNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,7 @@ class PublicDonationController extends Controller
 {
     public function __construct(
         private PaymentNotificationService $notifications,
+        private DonationReceiptAuditService $audits,
     ) {}
 
     public function index()
@@ -26,7 +29,12 @@ class PublicDonationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('public.index', compact('campaigns'));
+        $hero = HomepageContent::query()
+            ->where('section_key', 'hero')
+            ->where('is_published', true)
+            ->first();
+
+        return view('public.index', compact('campaigns', 'hero'));
     }
 
     public function show($slug)
@@ -85,6 +93,7 @@ class PublicDonationController extends Controller
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|string|in:toyyibpay,bank_transfer,qr_pay,cash',
             'transaction_reference' => 'required_unless:payment_method,toyyibpay|nullable|string|max:255',
+            'transaction_date' => 'required_unless:payment_method,toyyibpay|nullable|date|before_or_equal:today',
             'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
             'description' => 'nullable|string|max:255',
         ]);
@@ -117,7 +126,10 @@ class PublicDonationController extends Controller
             'proof_file' => $proofPath,
             'description' => $validated['description'] ?? 'Sumbangan Kebajikan WARGA CAKNA',
             'status' => DonationReceipt::STATUS_PENDING,
-            'donated_at' => now(),
+            'donated_at' => $validated['payment_method'] === 'toyyibpay'
+                ? null
+                : $validated['transaction_date'],
+            'user_id' => $request->user()?->id,
         ]);
 
         if ($validated['payment_method'] === 'toyyibpay') {
@@ -250,7 +262,7 @@ class PublicDonationController extends Controller
             $completedReceipt = DB::transaction(function () use ($receipt, $reference) {
                 $lockedReceipt = DonationReceipt::query()->lockForUpdate()->findOrFail($receipt->id);
 
-                if ($lockedReceipt->isCompleted()) {
+                if ($lockedReceipt->isCompleted() || ! $lockedReceipt->isPending()) {
                     return null;
                 }
 
@@ -259,8 +271,16 @@ class PublicDonationController extends Controller
                     'payment_reference' => $reference,
                     'verified_by' => null,
                     'verified_at' => now(),
+                    'donated_at' => now()->toDateString(),
                     'rejection_reason' => null,
                 ])->save();
+
+                $this->audits->record(
+                    $lockedReceipt,
+                    'verify',
+                    reason: 'Disahkan melalui callback ToyyibPay.',
+                    actorType: 'toyyibpay',
+                );
 
                 return $lockedReceipt->fresh();
             });
@@ -276,7 +296,7 @@ class PublicDonationController extends Controller
             DB::transaction(function () use ($receipt, $reference) {
                 $lockedReceipt = DonationReceipt::query()->lockForUpdate()->findOrFail($receipt->id);
 
-                if (! $lockedReceipt->isCompleted()) {
+                if ($lockedReceipt->isPending()) {
                     $lockedReceipt->forceFill([
                         'status' => DonationReceipt::STATUS_FAILED,
                         'payment_reference' => $reference,
