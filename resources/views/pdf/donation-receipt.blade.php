@@ -231,7 +231,11 @@
                         </tr>
                         <tr>
                             <td class="field-label">No. Rujukan:</td>
-                            <td class="field-value">{{ $receipt->reference_no ?? '-' }}</td>
+                            <td class="field-value">{{ $receipt->payment_reference ?: '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">Status:</td>
+                            <td class="field-value"><strong>{{ $receipt->status_label }}</strong></td>
                         </tr>
                     </table>
                 </td>

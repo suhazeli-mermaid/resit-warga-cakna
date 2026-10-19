@@ -51,15 +51,9 @@
                             <tr class="border-b">
                                 <th class="p-3 text-gray-700 font-bold uppercase text-xs">Status Bayaran</th>
                                 <td class="p-3">
-                                    @if($receipt->status === 'completed')
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded border border-green-300 text-xs font-bold bg-green-100 text-green-800">
-                                            ✓ BERJAYA (COMPLETED)
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded border border-red-300 text-xs font-bold bg-red-100 text-red-800">
-                                            ✕ BELUM BAYAR / GAGAL
-                                        </span>
-                                    @endif
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded border text-xs font-bold {{ $receipt->status_badge_classes }}">
+                                        {{ $receipt->status_label }}
+                                    </span>
                                 </td>
                             </tr>
                             <tr class="border-b bg-gray-50">
@@ -74,6 +68,24 @@
                                 <th class="p-3 text-gray-700 font-bold uppercase text-xs">Tujuan / Catatan</th>
                                 <td class="p-3 text-gray-700">{{ $receipt->description ?? 'Sumbangan Tabung Kebajikan WARGA CAKNA' }}</td>
                             </tr>
+                            @if($receipt->payment_reference)
+                                <tr class="border-t bg-gray-50">
+                                    <th class="p-3 text-gray-700 font-bold uppercase text-xs">No. Rujukan</th>
+                                    <td class="p-3 text-gray-700">{{ $receipt->payment_reference }}</td>
+                                </tr>
+                            @endif
+                            @if($receipt->verified_at)
+                                <tr class="border-t">
+                                    <th class="p-3 text-gray-700 font-bold uppercase text-xs">Disemak Pada</th>
+                                    <td class="p-3 text-gray-700">{{ $receipt->verified_at->format('d/m/Y h:i A') }}</td>
+                                </tr>
+                            @endif
+                            @if($receipt->rejection_reason)
+                                <tr class="border-t bg-red-50">
+                                    <th class="p-3 text-red-800 font-bold uppercase text-xs">Sebab Penolakan</th>
+                                    <td class="p-3 text-red-800">{{ $receipt->rejection_reason }}</td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>

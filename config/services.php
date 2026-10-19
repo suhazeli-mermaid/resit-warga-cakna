@@ -25,19 +25,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | ToyyibPay Direct Live API & Bank Credentials
+    | ToyyibPay Direct API & Bank Credentials
     |--------------------------------------------------------------------------
     */
     'toyyibpay' => [
-        'secret_key'    => env('kxmduu2g-7zzc-uysd-qry2-sk1fthtje5g8'),
-        'category_code' => env('s12aui8d'),
-        'base_url'      => 'https://toyyibpay.com', // LIVE ONLY
+        'secret_key' => env('TOYYIBPAY_SECRET_KEY'),
+        'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+        'base_url' => env('TOYYIBPAY_BASE_URL'),
+    ],
+
+    'notifications' => [
+        'admin_email' => env('ADMIN_NOTIFICATION_EMAIL'),
     ],
 
     'bank' => [
-        'name'          => 'Maybank Islamic',
-        'account_no'    => '563037065007',
-        'account_holder'=> 'PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU',
+        'name' => 'Maybank Islamic',
+        'account_no' => '563037065007',
+        'account_holder' => 'PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU',
     ],
 
 ];

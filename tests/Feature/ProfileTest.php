@@ -61,6 +61,23 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    public function test_profile_update_cannot_target_another_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $this->actingAs($user)->patch('/profile?user='.$otherUser->id, [
+            'id' => $otherUser->id,
+            'name' => 'Nama Akaun Sendiri',
+            'email' => 'sendiri@example.com',
+        ])->assertRedirect('/profile');
+
+        $this->assertSame('Nama Akaun Sendiri', $user->refresh()->name);
+        $this->assertSame('sendiri@example.com', $user->email);
+        $this->assertNotSame('Nama Akaun Sendiri', $otherUser->refresh()->name);
+        $this->assertNotSame('sendiri@example.com', $otherUser->email);
+    }
+
     public function test_user_can_delete_their_account(): void
     {
         $user = User::factory()->create();

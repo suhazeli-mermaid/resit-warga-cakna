@@ -13,6 +13,15 @@
 
         <!-- Tailwind CSS CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
+
+        <style>[x-cloak] { display: none !important; }</style>
+
+        {{-- Use the Vite bundle when it exists; keep localhost usable before Node/Vite is installed. --}}
+        @if (is_file(public_path('hot')) || is_file(public_path('build/manifest.json')))
+            @vite('resources/js/app.js')
+        @else
+            <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+        @endif
     </head>
     <body class="font-sans antialiased bg-gray-100">
         <div class="min-h-screen bg-gray-100">

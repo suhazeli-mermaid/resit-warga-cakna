@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PublicDonationController;
-use App\Http\Controllers\DonationReceiptController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\HomepageContentController;
 use App\Http\Controllers\Admin\CampaignCmsController;
+use App\Http\Controllers\Admin\HomepageContentController;
+use App\Http\Controllers\DonationReceiptController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicDonationController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/receipts/{id}/edit', [DonationReceiptController::class, 'edit'])->name('receipts.edit');
     Route::put('/receipts/{id}', [DonationReceiptController::class, 'update'])->name('receipts.update');
     Route::patch('/receipts/{id}/verify', [DonationReceiptController::class, 'verify'])->name('receipts.verify');
+    Route::patch('/receipts/{id}/reject', [DonationReceiptController::class, 'reject'])->name('receipts.reject');
     Route::post('/receipts/{id}/resend-email', [DonationReceiptController::class, 'resendEmail'])->name('receipts.resend-email');
     Route::get('/receipts/{id}/download-pdf', [DonationReceiptController::class, 'downloadPdf'])->name('receipts.download-pdf');
     Route::get('/receipts/{id}/view-pdf', [DonationReceiptController::class, 'viewPdf'])->name('receipts.view-pdf');
@@ -59,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');
     Route::put('/admin/campaigns/{id}', [HomepageContentController::class, 'updateCampaign'])->name('admin.campaigns.update');
     Route::post('/admin/signature', [HomepageContentController::class, 'uploadSignature'])->name('admin.upload-signature');
-    
+
     /*
     |--------------------------------------------------------------------------
     | Campaign CMS — Admin Management
@@ -108,7 +109,6 @@ Route::middleware(['auth'])->group(function () {
         '/admin/campaign-media/{id}',
         [CampaignCmsController::class, 'deleteMedia']
     )->name('admin.cms.media.delete');
-
 
 });
 

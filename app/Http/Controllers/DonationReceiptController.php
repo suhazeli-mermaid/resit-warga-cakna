@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationReceipt;
-use App\Mail\DonationReceiptMail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use App\Services\PaymentNotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DonationReceiptController extends Controller
 {
+    public function __construct(
+        private PaymentNotificationService $notifications,
+    ) {}
+
     /**
      * Memaparkan senarai resit dengan carian & isihan.
      */
@@ -22,9 +26,9 @@ class DonationReceiptController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('receipt_no', 'like', "%{$search}%")
-                  ->orWhere('donor_name', 'like', "%{$search}%")
-                  ->orWhere('donor_email', 'like', "%{$search}%")
-                  ->orWhere('donor_phone', 'like', "%{$search}%");
+                    ->orWhere('donor_name', 'like', "%{$search}%")
+                    ->orWhere('donor_email', 'like', "%{$search}%")
+                    ->orWhere('donor_phone', 'like', "%{$search}%");
             });
         }
 
@@ -70,33 +74,27 @@ class DonationReceiptController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'donor_name'     => 'required|string|max:255',
-            'donor_email'    => 'nullable|email|max:255',
-            'donor_phone'    => 'nullable|string|max:50',
-            'amount'         => 'required|numeric|min:1',
-            'payment_method' => 'required|string',
-            'description'    => 'nullable|string',
-            'status'         => 'nullable|string|in:completed,pending,failed',
-            'donated_at'     => 'nullable|date',
+            'donor_name' => 'required|string|max:255',
+            'donor_ic_passport' => 'nullable|string|max:255',
+            'donor_email' => 'nullable|email|max:255',
+            'donor_phone' => 'nullable|string|max:50',
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string|in:bank_transfer,online_transfer,qr_pay,cash,fpx,cheque',
+            'payment_reference' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'donated_at' => 'nullable|date',
         ]);
 
-        $validated['receipt_no'] = 'REC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-        
-        // Guna tarikh dari borang jika ada, jika tiada guna tarikh semasa
+        $validated['receipt_no'] = 'REC-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
         $validated['donated_at'] = $request->filled('donated_at') ? $request->donated_at : now();
-        $validated['status']     = $validated['status'] ?? 'completed';
+        $validated['status'] = DonationReceipt::STATUS_PENDING;
+        $validated['user_id'] = $request->user()->id;
 
         $receipt = DonationReceipt::create($validated);
 
-        if ($receipt->donor_email && $receipt->status === 'completed') {
-            try {
-                Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
-            } catch (\Exception $e) {
-                // Teruskan
-            }
-        }
+        $this->notifications->manualReceived($receipt);
 
-        return redirect()->route('receipts.index')->with('success', "Resit {$receipt->receipt_no} berjaya dicipta!");
+        return redirect()->route('receipts.index')->with('success', "Transaksi {$receipt->receipt_no} direkodkan dan sedang menunggu pengesahan.");
     }
 
     /**
@@ -105,6 +103,7 @@ class DonationReceiptController extends Controller
     public function show($id)
     {
         $receipt = DonationReceipt::findOrFail($id);
+
         return view('receipts.show', compact('receipt'));
     }
 
@@ -114,6 +113,7 @@ class DonationReceiptController extends Controller
     public function edit($id)
     {
         $receipt = DonationReceipt::findOrFail($id);
+
         return view('receipts.edit', compact('receipt'));
     }
 
@@ -125,17 +125,14 @@ class DonationReceiptController extends Controller
         $receipt = DonationReceipt::findOrFail($id);
 
         $validated = $request->validate([
-            'donor_name'     => 'required|string|max:255',
-            'donor_email'    => 'nullable|email|max:255',
-            'donor_phone'    => 'nullable|string|max:50',
-            'amount'         => 'required|numeric|min:1',
-            'status'         => 'required|in:completed,pending,failed',
-            'payment_method' => 'required|string',
-            'description'    => 'nullable|string',
-            'donated_at'     => 'nullable|date',
+            'donor_name' => 'required|string|max:255',
+            'donor_email' => 'nullable|email|max:255',
+            'donor_phone' => 'nullable|string|max:50',
+            'amount' => 'required|numeric|min:1',
+            'payment_reference' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'donated_at' => 'nullable|date',
         ]);
-
-        $oldStatus = $receipt->status;
 
         // Jika tarikh dihantar dalam borang, kemaskini tarikh tersebut
         if ($request->filled('donated_at')) {
@@ -145,35 +142,93 @@ class DonationReceiptController extends Controller
         $receipt->fill($validated);
         $receipt->save();
 
-        if ($oldStatus !== 'completed' && $receipt->status === 'completed' && $receipt->donor_email) {
-            try {
-                Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
-            } catch (\Exception $e) {
-                // Abaikan jika emel gagal
-            }
-        }
-
         return redirect()->route('receipts.index')->with('success', "Rekod resit {$receipt->receipt_no} berjaya dikemaskini.");
     }
 
     /**
      * Pengesahan manual status bayaran oleh Admin (Butang Sahkan).
      */
-    public function verify($id)
+    public function verify(Request $request, $id)
     {
-        $receipt = DonationReceipt::findOrFail($id);
-        $receipt->status = 'completed';
-        $receipt->save();
+        abort_unless($request->user()?->isAdmin(), 403);
 
-        if ($receipt->donor_email) {
-            try {
-                Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
-            } catch (\Exception $e) {
-                return redirect()->route('receipts.index')->with('success', 'Status disahkan kepada BERJAYA (Gagal hantar emel).');
+        $result = DB::transaction(function () use ($id, $request) {
+            $receipt = DonationReceipt::query()->lockForUpdate()->findOrFail($id);
+
+            if ($receipt->isCompleted()) {
+                return ['state' => 'already', 'receipt' => $receipt];
             }
+
+            if (! $receipt->isManualPayment() || ! $receipt->isPending()) {
+                return ['state' => 'invalid', 'receipt' => $receipt];
+            }
+
+            $receipt->forceFill([
+                'status' => DonationReceipt::STATUS_COMPLETED,
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+                'rejection_reason' => null,
+            ])->save();
+
+            return ['state' => 'completed', 'receipt' => $receipt->fresh()];
+        });
+
+        if ($result['state'] === 'completed') {
+            $this->notifications->completed($result['receipt']);
+
+            return redirect()->route('receipts.index')->with('success', 'Bayaran telah disahkan sebagai BERJAYA.');
         }
 
-        return redirect()->route('receipts.index')->with('success', 'Bayaran berjaya disahkan dan emel resit telah dihantar!');
+        if ($result['state'] === 'already') {
+            return redirect()->route('receipts.index')->with('success', 'Bayaran ini telah disahkan sebelum ini; tiada e-mel berulang dihantar.');
+        }
+
+        return redirect()->route('receipts.index')->with('error', 'Hanya transaksi manual yang masih menunggu boleh disahkan oleh Admin.');
+    }
+
+    /**
+     * Penolakan bayaran manual oleh Admin.
+     */
+    public function reject(Request $request, $id)
+    {
+        abort_unless($request->user()?->isAdmin(), 403);
+
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:2000',
+        ]);
+
+        $result = DB::transaction(function () use ($id, $request, $validated) {
+            $receipt = DonationReceipt::query()->lockForUpdate()->findOrFail($id);
+
+            if ($receipt->status === DonationReceipt::STATUS_REJECTED) {
+                return ['state' => 'already', 'receipt' => $receipt];
+            }
+
+            if (! $receipt->isManualPayment() || ! $receipt->isPending()) {
+                return ['state' => 'invalid', 'receipt' => $receipt];
+            }
+
+            $receipt->forceFill([
+                'status' => DonationReceipt::STATUS_REJECTED,
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+                'rejection_reason' => $validated['rejection_reason'],
+            ])->save();
+
+            return ['state' => 'rejected', 'receipt' => $receipt->fresh()];
+        });
+
+        if ($result['state'] === 'rejected') {
+            $this->notifications->rejected($result['receipt']);
+
+            return redirect()->route('receipts.index')->with('success', 'Transaksi telah ditolak dan sebab penolakan direkodkan.');
+        }
+
+        if ($result['state'] === 'already') {
+            return redirect()->route('receipts.index')->with('success', 'Transaksi ini telah ditolak sebelum ini; tiada e-mel berulang dihantar.');
+        }
+
+        return redirect()->route('receipts.index')->with('error', 'Hanya transaksi manual yang masih menunggu boleh ditolak oleh Admin.');
     }
 
     /**
@@ -183,16 +238,19 @@ class DonationReceiptController extends Controller
     {
         $receipt = DonationReceipt::findOrFail($id);
 
-        if (!$receipt->donor_email) {
+        if (! $receipt->donor_email) {
             return redirect()->back()->with('error', 'Penderma ini tiada alamat emel.');
         }
 
-        try {
-            Mail::to($receipt->donor_email)->send(new DonationReceiptMail($receipt));
-            return redirect()->back()->with('success', "Emel resit berjaya dihantar ke {$receipt->donor_email}.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', "Gagal menghantar emel: " . $e->getMessage());
+        if (! $receipt->isCompleted()) {
+            return redirect()->back()->with('error', 'Resit rasmi hanya boleh dihantar selepas bayaran disahkan BERJAYA.');
         }
+
+        if ($this->notifications->resendReceipt($receipt)) {
+            return redirect()->back()->with('success', "Emel resit berjaya dihantar ke {$receipt->donor_email}.");
+        }
+
+        return redirect()->back()->with('error', 'Emel tidak dihantar. Sila semak konfigurasi SMTP yang selamat.');
     }
 
     /**
@@ -202,6 +260,7 @@ class DonationReceiptController extends Controller
     {
         $receipt = DonationReceipt::findOrFail($id);
         $pdf = Pdf::loadView('pdf.donation-receipt', compact('receipt'));
+
         return $pdf->download("Resit-Sumbangan-{$receipt->receipt_no}.pdf");
     }
 
@@ -212,6 +271,7 @@ class DonationReceiptController extends Controller
     {
         $receipt = DonationReceipt::findOrFail($id);
         $pdf = Pdf::loadView('pdf.donation-receipt', compact('receipt'));
+
         return $pdf->stream("Resit-Sumbangan-{$receipt->receipt_no}.pdf");
     }
 }

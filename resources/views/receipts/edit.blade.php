@@ -12,7 +12,7 @@
                 <div class="mb-6 border-b pb-4 flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Borang Kemaskini Resit</h3>
-                        <p class="text-xs text-gray-500">Kemaskini maklumat penderma, tarikh, jumlah, atau status bayaran.</p>
+                        <p class="text-xs text-gray-500">Kemaskini maklumat penderma, tarikh dan jumlah. Status hanya berubah melalui aliran pengesahan.</p>
                     </div>
                     <a href="{{ route('receipts.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1.5 px-4 rounded text-xs transition">
                         &larr; Kembali ke Senarai
@@ -67,26 +67,22 @@
                             <input type="number" step="0.01" name="amount" value="{{ old('amount', $receipt->amount) }}" required class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                         </div>
 
-                        <!-- KAEDAH BAYARAN -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kaedah Bayaran *</label>
-                            <select name="payment_method" required class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                <option value="online_transfer" {{ old('payment_method', $receipt->payment_method) == 'online_transfer' ? 'selected' : '' }}>Online Transfer / FPX</option>
-                                <option value="cash" {{ old('payment_method', $receipt->payment_method) == 'cash' ? 'selected' : '' }}>Tunai (Cash)</option>
-                                <option value="cheque" {{ old('payment_method', $receipt->payment_method) == 'cheque' ? 'selected' : '' }}>Cek</option>
-                                <option value="qr_pay" {{ old('payment_method', $receipt->payment_method) == 'qr_pay' ? 'selected' : '' }}>DuitNow QR</option>
-                            </select>
+                            <span class="block text-xs font-bold text-gray-700 uppercase mb-1">Kaedah Bayaran</span>
+                            <span class="text-sm text-gray-800">{{ strtoupper(str_replace('_', ' ', $receipt->payment_method)) }}</span>
                         </div>
 
-                        <!-- STATUS BAYARAN -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Status Bayaran *</label>
-                            <select name="status" required class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                <option value="completed" {{ old('status', $receipt->status) == 'completed' ? 'selected' : '' }}>BERJAYA (Completed)</option>
-                                <option value="pending" {{ old('status', $receipt->status) == 'pending' ? 'selected' : '' }}>BELUM BAYAR / PENDING</option>
-                                <option value="failed" {{ old('status', $receipt->status) == 'failed' ? 'selected' : '' }}>GAGAL (Failed)</option>
-                            </select>
+                            <span class="block text-xs font-bold text-gray-700 uppercase mb-1">Status Bayaran</span>
+                            <span class="inline-flex items-center px-2.5 py-2 rounded border text-xs font-bold {{ $receipt->status_badge_classes }}">
+                                {{ $receipt->status_label }}
+                            </span>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">No. Rujukan Bayaran</label>
+                        <input type="text" name="payment_reference" value="{{ old('payment_reference', $receipt->payment_reference) }}" maxlength="255" class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                     </div>
 
                     <!-- CATATAN / TUJUAN -->

@@ -21,7 +21,9 @@
                         <select name="status" class="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                             <option value="">-- Semua Status --</option>
                             <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>BERJAYA</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>BELUM BAYAR / GAGAL</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>TUNGGU PENGESAHAN</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>DITOLAK</option>
+                            <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>GAGAL</option>
                         </select>
                     </div>
 
@@ -72,9 +74,6 @@
                         </thead>
                         <tbody class="divide-y text-sm">
                             @forelse($receipts as $receipt)
-                                @php
-                                    $isPaid = in_array(strtolower($receipt->status ?? ''), ['completed', 'paid', 'success']);
-                                @endphp
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 font-semibold text-emerald-800 whitespace-nowrap">
                                         {{ $receipt->receipt_no }}
@@ -89,15 +88,9 @@
                                         {{ \Carbon\Carbon::parse($receipt->donated_at)->format('d/m/Y') }}
                                     </td>
                                     <td class="p-3 text-center whitespace-nowrap">
-                                        @if($isPaid)
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded border border-green-300 text-xs font-bold bg-green-100 text-green-800">
-                                                ✓ BERJAYA
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded border border-red-300 text-xs font-bold bg-red-100 text-red-800">
-                                                ✕ BELUM BAYAR / GAGAL
-                                            </span>
-                                        @endif
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded border text-xs font-bold {{ $receipt->status_badge_classes }}">
+                                            {{ $receipt->status_label }}
+                                        </span>
                                     </td>
                                     <td class="p-3 text-right font-bold text-emerald-900 whitespace-nowrap">
                                         RM {{ number_format($receipt->amount, 2) }}
@@ -129,7 +122,7 @@
                                             @endif
 
                                             <!-- BUTANG EMEL -->
-                                            @if($receipt->donor_email)
+                                            @if($receipt->donor_email && $receipt->isCompleted())
                                                 <form action="{{ route('receipts.resend-email', $receipt->id) }}" method="POST" class="inline" onsubmit="return confirm('Hantar emel resit ini kepada {{ $receipt->donor_email }}?');">
                                                     @csrf
                                                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-2.5 rounded text-xs transition">
@@ -143,13 +136,22 @@
                                                 Kemaskini
                                             </a>
 
-                                            <!-- BUTANG SAHKAN (HANYA JIKA BELUM BAYAR) -->
-                                            @if(!$isPaid)
+                                            @if(Auth::user()->isAdmin() && $receipt->isManualPayment() && $receipt->isPending())
                                                 <form action="{{ route('receipts.verify', $receipt->id) }}" method="POST" class="inline" onsubmit="return confirm('Mengesahkan bayaran ini? Status akan bertukar ke BERJAYA.');">
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-2.5 rounded text-xs transition">
-                                                        Sahkan
+                                                        Sahkan Pembayaran
+                                                    </button>
+                                                </form>
+
+                                                <form action="{{ route('receipts.reject', $receipt->id) }}" method="POST" class="inline-flex items-center gap-1" onsubmit="return confirm('Tolak transaksi ini dengan sebab yang diberikan?');">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <label for="rejection_reason_{{ $receipt->id }}" class="sr-only">Sebab penolakan</label>
+                                                    <input id="rejection_reason_{{ $receipt->id }}" name="rejection_reason" type="text" required maxlength="2000" placeholder="Sebab penolakan" class="w-36 rounded border-gray-300 py-1 text-xs focus:border-red-500 focus:ring-red-500">
+                                                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2.5 rounded text-xs transition">
+                                                        Tolak
                                                     </button>
                                                 </form>
                                             @endif

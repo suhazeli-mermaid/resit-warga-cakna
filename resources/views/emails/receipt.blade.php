@@ -9,7 +9,7 @@
         <!-- HEADER EMEL & LOGO -->
         <tr style="background-color: #046a38; text-align: center;">
             <td style="padding: 25px;">
-                <img src="https://dana.wargacakna.org/images/logo-warga-cakna.png" alt="WARGA CAKNA" style="max-height: 70px; width: auto; margin-bottom: 10px;">
+                <img src="{{ asset('images/logo-warga-cakna.png') }}" alt="WARGA CAKNA" style="max-height: 70px; width: auto; margin-bottom: 10px;">
                 <h2 style="color: #ffffff; margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">
                     PERSATUAN PRIHATIN WARGA TERPINGGIR TERENGGANU
                 </h2>
@@ -38,6 +38,10 @@
                         <td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #046a38; font-size: 16px;">RM {{ number_format($receipt->amount, 2) }}</td>
                     </tr>
                     <tr>
+                        <td style="padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #e5e7eb; color: #555555;">Status:</td>
+                        <td style="padding: 10px 15px; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #046a38;">{{ $receipt->status_label }}</td>
+                    </tr>
+                    <tr>
                         <td style="padding: 10px 15px; font-weight: bold; color: #555555;">Tujuan / Catatan:</td>
                         <td style="padding: 10px 15px;">{{ $receipt->description ?? 'Sumbangan Tabung Kebajikan WARGA CAKNA' }}</td>
                     </tr>
@@ -48,7 +52,7 @@
                 </p>
 
                 <div style="text-align: center; margin-top: 25px;">
-                    <a href="https://dana.wargacakna.org/receipts/{{ $receipt->id }}/view-pdf" target="_blank" style="background-color: #046a38; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block;">
+                    <a href="{{ route('receipts.view-pdf', $receipt->id) }}" target="_blank" style="background-color: #046a38; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block;">
                         Lihat / Muat Turun Resit PDF
                     </a>
                 </div>
