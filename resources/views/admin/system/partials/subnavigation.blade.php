@@ -2,7 +2,7 @@
     <div class="flex flex-wrap gap-2">
         <a href="{{ route('admin.updates.index') }}"
            class="min-h-11 rounded-lg px-4 py-2.5 text-sm font-bold {{ request()->routeIs('admin.updates.*') ? 'bg-emerald-700 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
-            Smart Update Manager
+            Smart Update Manager — Tidak Aktif
         </a>
         <a href="{{ route('admin.email-logs.index') }}"
            class="min-h-11 rounded-lg px-4 py-2.5 text-sm font-bold {{ request()->routeIs('admin.email-logs.*') ? 'bg-emerald-700 text-white' : 'text-gray-700 hover:bg-gray-100' }}">

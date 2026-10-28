@@ -123,7 +123,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/organization/stamp', [OrganizationSettingsController::class, 'stamp'])->name('admin.organization.stamp.show');
     Route::put('/admin/organization/stamp', [OrganizationSettingsController::class, 'updateStamp'])->name('admin.organization.stamp');
 
-    // Smart Update Manager — tiada input arahan shell atau ref Git daripada UI.
+    // Historical Smart Update Manager records are read-only; deployment is inactive.
     Route::get('/admin/system/updates', [SmartUpdateController::class, 'index'])->name('admin.updates.index');
     Route::get('/admin/system/updates/{operation}', [SmartUpdateController::class, 'show'])->name('admin.updates.show');
 

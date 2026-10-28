@@ -11,8 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Update deployments are shell-driven. PHP is not given a process
-        // runner binding and cannot initiate operating-system commands.
+        //
     }
 
     /**

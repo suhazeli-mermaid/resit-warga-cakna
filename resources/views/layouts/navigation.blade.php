@@ -47,7 +47,7 @@
                             <x-nav-link :href="route('admin.organization.edit')" :active="request()->routeIs('admin.organization.*')">
                                 {{ __('Tetapan Organisasi') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*', 'admin.email-logs.*')">
+                            <x-nav-link :href="route('admin.email-logs.index')" :active="request()->routeIs('admin.updates.*', 'admin.email-logs.*')">
                                 {{ __('Sistem') }}
                             </x-nav-link>
                         @endif
@@ -170,7 +170,7 @@
                         {{ __('Tetapan Organisasi') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*')">
-                        {{ __('Smart Update Manager') }}
+                        {{ __('Smart Update Manager — Tidak Aktif') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.email-logs.index')" :active="request()->routeIs('admin.email-logs.*')">
                         {{ __('Log E-mel') }}
