@@ -7,12 +7,14 @@ use App\Models\CampaignDetail;
 use App\Models\CampaignUpdate;
 use App\Models\DonationReceipt;
 use App\Models\HomepageContent;
+use App\Services\Billplz\BillplzPaymentService;
 use App\Services\DonationReceiptAuditService;
 use App\Services\PaymentNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class PublicDonationController extends Controller
@@ -20,6 +22,7 @@ class PublicDonationController extends Controller
     public function __construct(
         private PaymentNotificationService $notifications,
         private DonationReceiptAuditService $audits,
+        private BillplzPaymentService $billplz,
     ) {}
 
     public function index()
@@ -91,9 +94,19 @@ class PublicDonationController extends Controller
             'donor_email' => 'nullable|email|max:255',
             'donor_phone' => 'required|string|max:50',
             'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string|in:toyyibpay,bank_transfer,qr_pay,cash',
-            'transaction_reference' => 'required_unless:payment_method,toyyibpay|nullable|string|max:255',
-            'transaction_date' => 'required_unless:payment_method,toyyibpay|nullable|date|before_or_equal:today',
+            'payment_method' => 'required|string|in:billplz,toyyibpay,bank_transfer,qr_pay,cash',
+            'transaction_reference' => [
+                Rule::requiredIf(fn () => ! in_array($request->input('payment_method'), ['billplz', 'toyyibpay'], true)),
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'transaction_date' => [
+                Rule::requiredIf(fn () => ! in_array($request->input('payment_method'), ['billplz', 'toyyibpay'], true)),
+                'nullable',
+                'date',
+                'before_or_equal:today',
+            ],
             'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
             'description' => 'nullable|string|max:255',
         ]);
@@ -102,6 +115,10 @@ class PublicDonationController extends Controller
             ->where('slug', $validated['campaign_id'])
             ->orWhere('id', $validated['campaign_id'])
             ->firstOrFail();
+
+        if ($validated['payment_method'] === 'billplz' && ! $this->billplz->isConfigured()) {
+            return back()->withInput()->with('error', 'Konfigurasi Billplz belum lengkap. Sila pilih kaedah bayaran manual atau hubungi pentadbir.');
+        }
 
         if ($validated['payment_method'] === 'toyyibpay' && ! $this->toyyibPayIsConfigured()) {
             return back()->withInput()->with('error', 'Konfigurasi ToyyibPay belum lengkap. Sila pilih kaedah bayaran manual atau hubungi pentadbir.');
@@ -122,15 +139,30 @@ class PublicDonationController extends Controller
             'donor_phone' => $validated['donor_phone'],
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
+            'payment_gateway' => match ($validated['payment_method']) {
+                'billplz' => DonationReceipt::GATEWAY_BILLPLZ,
+                'toyyibpay' => DonationReceipt::GATEWAY_TOYYIBPAY,
+                default => null,
+            },
             'payment_reference' => $validated['transaction_reference'] ?? null,
             'proof_file' => $proofPath,
             'description' => $validated['description'] ?? 'Sumbangan Kebajikan WARGA CAKNA',
             'status' => DonationReceipt::STATUS_PENDING,
-            'donated_at' => $validated['payment_method'] === 'toyyibpay'
+            'donated_at' => in_array($validated['payment_method'], ['billplz', 'toyyibpay'], true)
                 ? null
                 : $validated['transaction_date'],
             'user_id' => $request->user()?->id,
         ]);
+
+        if ($validated['payment_method'] === 'billplz') {
+            try {
+                return redirect()->away($this->billplz->createBill($receipt));
+            } catch (Throwable) {
+                Log::warning('Billplz bill creation failed.', ['receipt_id' => $receipt->id]);
+            }
+
+            return redirect()->back()->with('error', 'Gagal membina bil bayaran Billplz. Sila semak sambungan atau pilih kaedah bayaran manual.');
+        }
 
         if ($validated['payment_method'] === 'toyyibpay') {
             $secretKey = (string) config('services.toyyibpay.secret_key');

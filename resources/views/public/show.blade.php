@@ -86,8 +86,8 @@
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Pilih Kaedah Pembayaran *</label>
                     <div class="space-y-2">
                         <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="payment_method" value="toyyibpay" checked onclick="toggleManualFields('toyyibpay')" class="text-[#046a38]">
-                            <span class="ml-3 font-semibold text-sm text-gray-800">ToyyibPay Direct (FPX / Online Banking)</span>
+                            <input type="radio" name="payment_method" value="billplz" checked onclick="toggleManualFields('billplz')" class="text-[#046a38]">
+                            <span class="ml-3 font-semibold text-sm text-gray-800">Billplz (FPX / Online Banking)</span>
                         </label>
                         <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50">
                             <input type="radio" name="payment_method" value="bank_transfer" onclick="toggleManualFields('bank_transfer')" class="text-[#046a38]">
@@ -168,7 +168,7 @@
             const dateInput = document.getElementById('transaction_date');
             const refLabel = document.getElementById('ref_label');
 
-            if (method === 'toyyibpay') {
+            if (method === 'billplz') {
                 box.classList.add('hidden');
                 refInput.removeAttribute('required');
                 dateInput.removeAttribute('required');

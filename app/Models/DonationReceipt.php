@@ -10,6 +10,10 @@ class DonationReceipt extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const GATEWAY_BILLPLZ = 'billplz';
+
+    public const GATEWAY_TOYYIBPAY = 'toyyibpay';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_COMPLETED = 'completed';
@@ -28,8 +32,11 @@ class DonationReceipt extends Model
         'donor_email',
         'amount',
         'payment_method',
+        'payment_gateway',
         'payment_reference',
         'toyyibpay_bill_code',
+        'gateway_bill_id',
+        'gateway_collection_id',
         'proof_file',
         'status',
         'verified_by',
@@ -86,13 +93,21 @@ class DonationReceipt extends Model
 
     public function isManualPayment(): bool
     {
-        return ! $this->usesToyyibPay();
+        return ! $this->usesToyyibPay() && ! $this->usesBillplz();
     }
 
     public function usesToyyibPay(): bool
     {
-        return $this->payment_method === 'toyyibpay'
+        return $this->payment_gateway === self::GATEWAY_TOYYIBPAY
+            || $this->payment_method === self::GATEWAY_TOYYIBPAY
             || filled($this->toyyibpay_bill_code);
+    }
+
+    public function usesBillplz(): bool
+    {
+        return $this->payment_gateway === self::GATEWAY_BILLPLZ
+            || $this->payment_method === self::GATEWAY_BILLPLZ
+            || filled($this->gateway_bill_id);
     }
 
     public function getStatusLabelAttribute(): string

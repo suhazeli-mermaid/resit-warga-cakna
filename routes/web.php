@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\HomepageContentController;
 use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\SmartUpdateController;
 use App\Http\Controllers\Admin\VoucherAcknowledgementController as AdminVoucherAcknowledgementController;
+use App\Http\Controllers\BillplzPaymentController;
 use App\Http\Controllers\DonationReceiptController;
 use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ProfileController;
@@ -23,8 +24,11 @@ Route::get('/dana/{slug}', [PublicDonationController::class, 'show'])->name('dan
 Route::get('/dana/{slug}/maklumat', [PublicDonationController::class, 'information'])->name('dana.information');
 Route::get('/campaigns/{id}', [PublicDonationController::class, 'show'])->name('public.show');
 
-// ToyyibPay Process & Callbacks
+// New donations use Billplz. Legacy ToyyibPay endpoints remain available for
+// historical bills that may still return or send a callback during transition.
 Route::post('/donate/process', [PublicDonationController::class, 'processDonation'])->name('public.donate.process');
+Route::get('/payment/billplz/redirect', [BillplzPaymentController::class, 'redirect'])->name('billplz.redirect');
+Route::post('/payment/billplz/callback', [BillplzPaymentController::class, 'callback'])->name('billplz.callback');
 Route::get('/payment/return', [PublicDonationController::class, 'paymentReturn'])->name('payment.return');
 Route::post('/payment/callback', [PublicDonationController::class, 'paymentCallback'])->name('payment.callback');
 

@@ -34,6 +34,23 @@ return [
         'base_url' => env('TOYYIBPAY_BASE_URL'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Billplz Donation Gateway
+    |--------------------------------------------------------------------------
+    |
+    | BILLPLZ_BASE_URL selects the isolated sandbox or production account.
+    | Credentials must never be placed in source control.
+    |
+    */
+    'billplz' => [
+        'api_secret_key' => env('BILLPLZ_API_SECRET_KEY'),
+        'collection_id' => env('BILLPLZ_COLLECTION_ID'),
+        'x_signature_key' => env('BILLPLZ_X_SIGNATURE_KEY'),
+        'base_url' => env('BILLPLZ_BASE_URL'),
+        'timeout' => (int) env('BILLPLZ_TIMEOUT', 15),
+    ],
+
     'notifications' => [
         'admin_email' => env('ADMIN_NOTIFICATION_EMAIL'),
     ],
