@@ -2,10 +2,15 @@
 
 use App\Http\Controllers\Admin\CampaignCmsController;
 use App\Http\Controllers\Admin\HomepageContentController;
+use App\Http\Controllers\Admin\OrganizationSettingsController;
+use App\Http\Controllers\Admin\SmartUpdateController;
+use App\Http\Controllers\Admin\VoucherAcknowledgementController as AdminVoucherAcknowledgementController;
 use App\Http\Controllers\DonationReceiptController;
+use App\Http\Controllers\PaymentVoucherController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicDonationController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VoucherAcknowledgementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +28,12 @@ Route::post('/donate/process', [PublicDonationController::class, 'processDonatio
 Route::get('/payment/return', [PublicDonationController::class, 'paymentReturn'])->name('payment.return');
 Route::post('/payment/callback', [PublicDonationController::class, 'paymentCallback'])->name('payment.callback');
 
+// Pautan awam satu kali; token tidak disimpan dalam log aplikasi oleh controller.
+Route::middleware('throttle:10,1')->group(function () {
+    Route::get('/baucar/akuan/{token}', [VoucherAcknowledgementController::class, 'show'])->name('vouchers.acknowledgement.show');
+    Route::post('/baucar/akuan/{token}', [VoucherAcknowledgementController::class, 'store'])->name('vouchers.acknowledgement.store');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated User Routes (Dashboard Redirects to Receipts List)
@@ -37,6 +48,9 @@ Route::middleware(['auth'])->group(function () {
     // Pengurusan Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/digital-signature', [ProfileController::class, 'signature'])->name('profile.signature.show');
+    Route::put('/profile/digital-signature', [ProfileController::class, 'updateSignature'])->name('profile.signature.update');
+    Route::delete('/profile/digital-signature', [ProfileController::class, 'destroySignature'])->name('profile.signature.destroy');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Pengurusan Resit Sumbangan (Core Module)
@@ -59,6 +73,46 @@ Route::middleware(['auth'])->group(function () {
     // Admin Hub Routes
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
+
+    // Modul Baucar Bayaran
+    Route::get('/admin/kewangan/baucar', [PaymentVoucherController::class, 'dashboard'])->name('vouchers.dashboard');
+    Route::get('/admin/kewangan/baucar/senarai', [PaymentVoucherController::class, 'index'])->name('vouchers.index');
+    Route::get('/admin/kewangan/baucar/arkib', [PaymentVoucherController::class, 'archiveIndex'])->name('vouchers.archive.index');
+    Route::get('/admin/kewangan/baucar/akuan', [AdminVoucherAcknowledgementController::class, 'index'])->name('vouchers.acknowledgements.index');
+    Route::get('/admin/kewangan/baucar/akuan/{acknowledgement}', [AdminVoucherAcknowledgementController::class, 'show'])->name('vouchers.acknowledgements.show');
+    Route::get('/admin/kewangan/baucar/akuan/{acknowledgement}/document', [AdminVoucherAcknowledgementController::class, 'document'])->name('vouchers.acknowledgements.document');
+    Route::get('/admin/kewangan/baucar/akuan/{acknowledgement}/pdf', [AdminVoucherAcknowledgementController::class, 'pdf'])->name('vouchers.acknowledgements.pdf');
+    Route::get('/admin/kewangan/baucar/create', [PaymentVoucherController::class, 'create'])->name('vouchers.create');
+    Route::post('/admin/kewangan/baucar', [PaymentVoucherController::class, 'store'])->name('vouchers.store');
+    Route::get('/admin/kewangan/baucar/{voucher}', [PaymentVoucherController::class, 'show'])->name('vouchers.show');
+    Route::get('/admin/kewangan/baucar/{voucher}/edit', [PaymentVoucherController::class, 'edit'])->name('vouchers.edit');
+    Route::put('/admin/kewangan/baucar/{voucher}', [PaymentVoucherController::class, 'update'])->name('vouchers.update');
+    Route::post('/admin/kewangan/baucar/{voucher}/submit', [PaymentVoucherController::class, 'submit'])->name('vouchers.submit');
+    Route::post('/admin/kewangan/baucar/{voucher}/approve', [PaymentVoucherController::class, 'approve'])->name('vouchers.approve');
+    Route::post('/admin/kewangan/baucar/{voucher}/reject', [PaymentVoucherController::class, 'reject'])->name('vouchers.reject');
+    Route::post('/admin/kewangan/baucar/{voucher}/issue', [PaymentVoucherController::class, 'issue'])->name('vouchers.issue');
+    Route::post('/admin/kewangan/baucar/{voucher}/confirm-payment', [PaymentVoucherController::class, 'confirmPayment'])->name('vouchers.confirm-payment');
+    Route::post('/admin/kewangan/baucar/{voucher}/resend-acknowledgement', [PaymentVoucherController::class, 'resendAcknowledgement'])->name('vouchers.resend-acknowledgement');
+    Route::post('/admin/kewangan/baucar/{voucher}/cancel', [PaymentVoucherController::class, 'cancel'])->name('vouchers.cancel');
+    Route::post('/admin/kewangan/baucar/{voucher}/reissue', [PaymentVoucherController::class, 'reissue'])->name('vouchers.reissue');
+    Route::post('/admin/kewangan/baucar/{voucher}/archive', [PaymentVoucherController::class, 'archive'])->name('vouchers.archive');
+    Route::get('/admin/kewangan/baucar/{voucher}/document', [PaymentVoucherController::class, 'document'])->name('vouchers.document');
+    Route::get('/admin/kewangan/baucar/{voucher}/pdf', [PaymentVoucherController::class, 'documentPdf'])->name('vouchers.pdf');
+    Route::get('/admin/kewangan/baucar/{voucher}/acknowledgement-pdf', [PaymentVoucherController::class, 'acknowledgementPdf'])->name('vouchers.acknowledgement.pdf');
+    Route::get('/admin/kewangan/baucar/{voucher}/payment-proof', [PaymentVoucherController::class, 'paymentProof'])->name('vouchers.payment-proof');
+
+    // Tetapan organisasi
+    Route::get('/admin/organization', [OrganizationSettingsController::class, 'edit'])->name('admin.organization.edit');
+    Route::get('/admin/organization/stamp', [OrganizationSettingsController::class, 'stamp'])->name('admin.organization.stamp.show');
+    Route::put('/admin/organization/stamp', [OrganizationSettingsController::class, 'updateStamp'])->name('admin.organization.stamp');
+
+    // Smart Update Manager — tiada input arahan shell atau ref Git daripada UI.
+    Route::get('/admin/system/updates', [SmartUpdateController::class, 'index'])->name('admin.updates.index');
+    Route::post('/admin/system/updates/check', [SmartUpdateController::class, 'check'])->name('admin.updates.check');
+    Route::get('/admin/system/updates/{operation}', [SmartUpdateController::class, 'show'])->name('admin.updates.show');
+    Route::post('/admin/system/updates/{operation}/preflight', [SmartUpdateController::class, 'preflight'])->name('admin.updates.preflight');
+    Route::post('/admin/system/updates/{operation}/backup', [SmartUpdateController::class, 'backup'])->name('admin.updates.backup');
+    Route::post('/admin/system/updates/{operation}/install', [SmartUpdateController::class, 'install'])->name('admin.updates.install');
 
     // Homepage Content Management & Signature Upload
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');

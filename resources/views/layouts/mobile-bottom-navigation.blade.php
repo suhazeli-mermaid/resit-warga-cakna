@@ -1,11 +1,14 @@
 @php
     $receiptRoute = auth()->check() ? route('receipts.index') : route('login');
     $accountRoute = auth()->check() ? route('profile.edit') : route('login');
+    $financeItem = auth()->check() && auth()->user()->hasVoucherRole()
+        ? ['label' => 'Baucar', 'href' => route('vouchers.dashboard'), 'active' => request()->routeIs('vouchers.*'), 'icon' => 'fund']
+        : ['label' => 'Senarai Dana', 'href' => route('public.index').'#senarai-dana', 'active' => false, 'icon' => 'fund'];
     $items = [
         ['label' => 'Home', 'href' => route('public.index'), 'active' => request()->routeIs('public.index'), 'icon' => 'home'],
         ['label' => 'Portal Awam', 'href' => route('public.index').'#program-aktif', 'active' => request()->routeIs('dana.*'), 'icon' => 'heart'],
         ['label' => 'Resit Saya', 'href' => $receiptRoute, 'active' => request()->routeIs('receipts.*'), 'icon' => 'receipt'],
-        ['label' => 'Senarai Dana', 'href' => route('public.index').'#senarai-dana', 'active' => false, 'icon' => 'fund'],
+        $financeItem,
         ['label' => 'Akaun Saya', 'href' => $accountRoute, 'active' => request()->routeIs('profile.*'), 'icon' => 'user'],
     ];
 @endphp

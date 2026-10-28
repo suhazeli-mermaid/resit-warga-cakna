@@ -31,10 +31,24 @@
                             </x-nav-link>
                         @endif
 
-                        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'ajk')
+                        @if(Auth::user()->hasVoucherRole())
+                            <x-nav-link :href="route('vouchers.dashboard')" :active="request()->routeIs('vouchers.*')">
+                                {{ __('Baucar Bayaran') }}
+                            </x-nav-link>
+                        @endif
+
+                        @if(Auth::user()->isAdmin())
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                                 {{ __('Admin Hub') }}
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.organization.edit')" :active="request()->routeIs('admin.organization.*')">
+                                {{ __('Tetapan Organisasi') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*')">
+                                {{ __('Sistem') }}
+                            </x-nav-link>
+                        @endif
+                        @if(Auth::user()->isAdmin() || Auth::user()->role === 'ajk')
                             <x-nav-link :href="route('admin.homepage.edit')" :active="request()->routeIs('admin.homepage.*')">
                                 {{ __('Pengurusan Muka Depan') }}
                             </x-nav-link>
@@ -137,10 +151,23 @@
                         {{ __('+ Cipta Resit Baharu') }}
                     </x-responsive-nav-link>
                 @endif
-                @if(Auth::user()->role === 'admin' || Auth::user()->role === 'ajk')
+                @if(Auth::user()->hasVoucherRole())
+                    <x-responsive-nav-link :href="route('vouchers.dashboard')" :active="request()->routeIs('vouchers.*')">
+                        {{ __('Baucar Bayaran') }}
+                    </x-responsive-nav-link>
+                @endif
+                @if(Auth::user()->isAdmin())
                     <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                         {{ __('Admin Hub') }}
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.organization.edit')" :active="request()->routeIs('admin.organization.*')">
+                        {{ __('Tetapan Organisasi') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*')">
+                        {{ __('Smart Update Manager') }}
+                    </x-responsive-nav-link>
+                @endif
+                @if(Auth::user()->isAdmin() || Auth::user()->role === 'ajk')
                     <x-responsive-nav-link :href="route('admin.homepage.edit')" :active="request()->routeIs('admin.homepage.*')">
                         {{ __('Pengurusan Muka Depan') }}
                     </x-responsive-nav-link>

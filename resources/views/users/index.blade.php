@@ -40,8 +40,9 @@
                                 <th class="p-3 border">NAMA PENGGUNA</th>
                                 <th class="p-3 border">ALAMAT EMEL</th>
                                 <th class="p-3 border text-center">PERANAN (ROLE) SEMASA</th>
+                                <th class="p-3 border">JAWATAN WARGA CAKNA</th>
                                 <th class="p-3 border text-center">TARIKH DAFTAR</th>
-                                <th class="p-3 border text-center">TINDAKAN KEMASKINI ROLE</th>
+                                <th class="p-3 border text-center">TINDAKAN KEMASKINI</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y text-sm">
@@ -68,33 +69,43 @@
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
                                                 AJK
                                             </span>
+                                        @elseif($user->role === 'setiausaha')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-cyan-100 text-cyan-800 border border-cyan-300">SETIAUSAHA</span>
+                                        @elseif($user->role === 'bendahari')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">BENDAHARI</span>
                                         @else
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300">
                                                 PENGGUNA
                                             </span>
                                         @endif
                                     </td>
+                                    <td class="p-3 border text-sm text-gray-700">
+                                        {{ $user->organization_position ?: 'Belum ditetapkan' }}
+                                    </td>
                                     <td class="p-3 border text-center text-xs text-gray-500 whitespace-nowrap">
                                         {{ $user->created_at ? $user->created_at->format('d/m/Y h:i A') : '-' }}
                                     </td>
                                     <td class="p-3 border text-center">
-                                        <form action="{{ route('users.update-role', $user->id) }}" method="POST" class="flex items-center justify-center gap-2">
+                                        <form action="{{ route('users.update-role', $user->id) }}" method="POST" class="flex min-w-56 flex-col items-stretch justify-center gap-2">
                                             @csrf
                                             @method('PATCH')
                                             <select name="role" class="text-xs rounded border-gray-300 py-1 px-2 focus:ring-emerald-500 focus:border-emerald-500">
-                                                <option value="user" {{ $user->role === 'user' || !$user->role ? 'selected' : '' }}>Pengguna</option>
+                                                <option value="penderma" {{ in_array($user->role, ['penderma','user',null], true) ? 'selected' : '' }}>Penderma</option>
                                                 <option value="ajk" {{ $user->role === 'ajk' ? 'selected' : '' }}>AJK</option>
+                                                <option value="setiausaha" {{ $user->role === 'setiausaha' ? 'selected' : '' }}>Setiausaha</option>
+                                                <option value="bendahari" {{ $user->role === 'bendahari' ? 'selected' : '' }}>Bendahari</option>
                                                 <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                                             </select>
+                                            <input type="text" name="organization_position" value="{{ $user->organization_position }}" maxlength="120" placeholder="Contoh: Pengerusi / Bendahari" class="rounded border-gray-300 px-2 py-1 text-xs focus:border-emerald-500 focus:ring-emerald-500">
                                             <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1 px-3 rounded text-xs transition">
-                                                Kemaskini
+                                                Kemas Kini
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="p-6 text-center text-gray-500">
+                                    <td colspan="7" class="p-6 text-center text-gray-500">
                                         Tiada pengguna berdaftar.
                                     </td>
                                 </tr>

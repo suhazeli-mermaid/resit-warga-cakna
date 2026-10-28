@@ -17,7 +17,17 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! User::isValidIndividualName($value)) {
+                        $fail('Nama Penuh mestilah nama individu yang sah dan bukan nama organisasi.');
+                    }
+                },
+            ],
+            'salutation' => ['nullable', Rule::in(User::SALUTATIONS)],
             'email' => [
                 'required',
                 'string',
@@ -26,6 +36,14 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama Penuh wajib diisi.',
+            'salutation.in' => 'Gelaran yang dipilih tidak sah.',
         ];
     }
 }
