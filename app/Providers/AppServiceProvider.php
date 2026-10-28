@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Services\Updates\NativeUpdateCommandRunner;
-use App\Services\Updates\UpdateCommandRunner;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +11,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(UpdateCommandRunner::class, NativeUpdateCommandRunner::class);
+        // Update deployments are shell-driven. PHP is not given a process
+        // runner binding and cannot initiate operating-system commands.
     }
 
     /**

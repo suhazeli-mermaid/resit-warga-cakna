@@ -125,11 +125,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Smart Update Manager — tiada input arahan shell atau ref Git daripada UI.
     Route::get('/admin/system/updates', [SmartUpdateController::class, 'index'])->name('admin.updates.index');
-    Route::post('/admin/system/updates/check', [SmartUpdateController::class, 'check'])->name('admin.updates.check');
     Route::get('/admin/system/updates/{operation}', [SmartUpdateController::class, 'show'])->name('admin.updates.show');
-    Route::post('/admin/system/updates/{operation}/preflight', [SmartUpdateController::class, 'preflight'])->name('admin.updates.preflight');
-    Route::post('/admin/system/updates/{operation}/backup', [SmartUpdateController::class, 'backup'])->name('admin.updates.backup');
-    Route::post('/admin/system/updates/{operation}/install', [SmartUpdateController::class, 'install'])->name('admin.updates.install');
 
     // Log E-mel — audit kekal dan resend type-aware untuk Admin sahaja.
     Route::get('/admin/system/email-logs', [EmailLogController::class, 'index'])->name('admin.email-logs.index');
