@@ -73,6 +73,7 @@ class VoucherSignatoryIdentityTest extends TestCase
             'role' => 'ajk',
             'name' => 'Warga Cakna',
             'organization_position' => 'AJK Pemohon',
+            'can_create_voucher' => true,
         ]);
         $voucher = $this->voucher($applicant);
 

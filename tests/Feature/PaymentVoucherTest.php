@@ -46,7 +46,7 @@ class PaymentVoucherTest extends TestCase
 
     public function test_creation_and_collision_safe_daily_numbering(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
         $payload = $this->payload(['voucher_date' => '2026-10-28']);
 
         $this->actingAs($ajk)->post(route('vouchers.store'), $payload)->assertRedirect();
@@ -60,7 +60,7 @@ class PaymentVoucherTest extends TestCase
 
     public function test_draft_can_be_edited_but_issued_document_cannot(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
         $voucher = $this->voucher($ajk);
 
         $this->actingAs($ajk)->put(route('vouchers.update', $voucher), $this->payload(['purpose' => 'Tujuan dikemas kini']))->assertRedirect();
@@ -72,7 +72,11 @@ class PaymentVoucherTest extends TestCase
 
     public function test_missing_applicant_signature_blocks_submission_without_server_error(): void
     {
-        $applicant = User::factory()->create(['role' => 'ajk', 'organization_position' => 'AJK Kebajikan']);
+        $applicant = User::factory()->create([
+            'role' => 'ajk',
+            'organization_position' => 'AJK Kebajikan',
+            'can_create_voucher' => true,
+        ]);
         $voucher = $this->voucher($applicant);
 
         $this->actingAs($applicant)->get(route('vouchers.show', $voucher))
@@ -93,7 +97,7 @@ class PaymentVoucherTest extends TestCase
 
     public function test_applicant_signature_allows_submission(): void
     {
-        $applicant = User::factory()->create(['role' => 'ajk']);
+        $applicant = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
         $this->signature($applicant, 'ready');
         $voucher = $this->voucher($applicant);
 

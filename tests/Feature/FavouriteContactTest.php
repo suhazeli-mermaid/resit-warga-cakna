@@ -48,7 +48,7 @@ class FavouriteContactTest extends TestCase
 
     public function test_non_admin_cannot_manage_shared_favourites(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
 
         $this->actingAs($ajk)->get(route('admin.favourite-contacts.index'))->assertForbidden();
         $this->actingAs($ajk)->post(route('admin.favourite-contacts.store'), [
@@ -82,7 +82,7 @@ class FavouriteContactTest extends TestCase
 
     public function test_voucher_prefill_is_available_to_authorized_ajk_and_has_no_transaction_fields(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
         $contact = $this->contact([
             'address' => 'Alamat Penerima',
             'bank_name' => 'Bank UAT',
@@ -145,7 +145,7 @@ class FavouriteContactTest extends TestCase
 
     public function test_voucher_uses_edited_prefill_snapshot_without_mutating_favourite(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
         $contact = $this->contact([
             'name' => 'Penerima Template',
             'is_donor_favourite' => false,
@@ -283,7 +283,7 @@ class FavouriteContactTest extends TestCase
 
     public function test_non_admin_cannot_save_shared_favourite_from_voucher_flow(): void
     {
-        $ajk = User::factory()->create(['role' => 'ajk']);
+        $ajk = User::factory()->create(['role' => 'ajk', 'can_create_voucher' => true]);
 
         $this->actingAs($ajk)->post(route('vouchers.store'), array_merge($this->voucherPayload(), [
             'save_as_favourite' => '1',
@@ -292,7 +292,7 @@ class FavouriteContactTest extends TestCase
         $this->assertDatabaseCount('payment_vouchers', 0);
     }
 
-    public function test_donor_prefill_is_admin_only_and_sensitive_values_are_not_in_search_results(): void
+    public function test_donor_prefill_requires_receipt_permission_and_sensitive_values_are_not_in_search_results(): void
     {
         $ajk = User::factory()->create(['role' => 'ajk']);
         $admin = User::factory()->create(['role' => 'admin']);

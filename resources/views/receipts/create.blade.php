@@ -30,8 +30,10 @@
                         <div><label class="mb-1 block text-sm font-bold" for="payment_reference">No. Rujukan Bayaran</label><input id="payment_reference" name="payment_reference" value="{{ old('payment_reference') }}" class="min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"></div>
                     </div>
                     <div><label class="mb-1 block text-sm font-bold" for="description">Tujuan / Catatan</label><textarea id="description" name="description" rows="3" class="w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">{{ old('description') }}</textarea></div>
-                    <label class="flex min-h-11 items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><input type="checkbox" name="save_as_favourite" value="1" @checked(old('save_as_favourite')) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"> ⭐ Simpan / kemas kini sebagai Favourite organisasi</label>
-                    @if(session('favourite_duplicate_candidate'))
+                    @if(auth()->user()->isAdmin())
+                        <label class="flex min-h-11 items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><input type="checkbox" name="save_as_favourite" value="1" @checked(old('save_as_favourite')) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"> ⭐ Simpan / kemas kini sebagai Favourite organisasi</label>
+                    @endif
+                    @if(auth()->user()->isAdmin() && session('favourite_duplicate_candidate'))
                         @php($candidate = session('favourite_duplicate_candidate'))
                         <div class="rounded-lg border border-amber-400 bg-amber-50 p-4 text-sm text-amber-950">
                             <p class="font-bold">Kemungkinan Favourite pendua: {{ $candidate['name'] }}</p>

@@ -105,7 +105,7 @@ class DonationReceiptController extends Controller
      */
     public function create(Request $request)
     {
-        $this->ensureAdmin($request);
+        $this->ensureCanCreateReceipt($request);
 
         return view('receipts.create');
     }
@@ -115,7 +115,7 @@ class DonationReceiptController extends Controller
      */
     public function store(Request $request)
     {
-        $this->ensureAdmin($request);
+        $this->ensureCanCreateReceipt($request);
 
         $validated = $request->validate([
             'donor_name' => 'required|string|max:255',
@@ -135,6 +135,9 @@ class DonationReceiptController extends Controller
             'duplicate_contact_id' => 'nullable|integer|exists:donors,id',
             'confirm_favourite_duplicate' => 'sometimes|accepted',
         ]);
+        if ($request->boolean('save_as_favourite')) {
+            abort_unless($request->user()->isAdmin(), 403);
+        }
 
         $validated['receipt_no'] = 'REC-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
         $validated['status'] = DonationReceipt::STATUS_PENDING;
@@ -487,6 +490,11 @@ class DonationReceiptController extends Controller
     private function ensureAdmin(Request $request): void
     {
         abort_unless($request->user()?->isAdmin(), 403);
+    }
+
+    private function ensureCanCreateReceipt(Request $request): void
+    {
+        abort_unless($request->user()?->canCreateReceipt(), 403);
     }
 
     private function ensureReceiptAccess(Request $request, DonationReceipt $receipt): void

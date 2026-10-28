@@ -25,7 +25,7 @@
                             {{ __('Senarai Resit') }}
                         </x-nav-link>
 
-                        @if(Auth::user()->isAdmin())
+                        @if(Auth::user()->canCreateReceipt())
                             <x-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
                                 {{ __('+ Cipta Resit Baharu') }}
                             </x-nav-link>
@@ -149,7 +149,7 @@
                 <x-responsive-nav-link :href="route('receipts.index')" :active="request()->routeIs('receipts.index')">
                     {{ __('Senarai Resit') }}
                 </x-responsive-nav-link>
-                @if(Auth::user()->isAdmin())
+                @if(Auth::user()->canCreateReceipt())
                     <x-responsive-nav-link :href="route('receipts.create')" :active="request()->routeIs('receipts.create')">
                         {{ __('+ Cipta Resit Baharu') }}
                     </x-responsive-nav-link>

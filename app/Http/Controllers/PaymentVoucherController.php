@@ -90,9 +90,12 @@ class PaymentVoucherController extends Controller
         Gate::authorize('create', PaymentVoucher::class);
 
         return view('vouchers.create', [
-            'applicants' => $request->user()->isAdmin() || $request->user()->isSecretary()
-                ? User::query()->whereIn('role', ['ajk', 'admin', 'setiausaha'])->orderBy('name')->get()
-                : collect([$request->user()]),
+            'applicants' => $request->user()->isAdmin()
+                ? User::query()
+                    ->where(fn ($query) => $query->where('role', 'admin')->orWhere('can_create_voucher', true))
+                    ->orderBy('name')
+                    ->get()
+                : null,
         ]);
     }
 
@@ -109,7 +112,7 @@ class PaymentVoucherController extends Controller
         if ($request->boolean('save_as_favourite')) {
             abort_unless($request->user()->isAdmin(), 403);
         }
-        $applicantId = ($request->user()->isAdmin() || $request->user()->isSecretary())
+        $applicantId = $request->user()->isAdmin()
             ? (int) ($validated['applicant_id'] ?? $request->user()->id)
             : $request->user()->id;
 
@@ -380,7 +383,7 @@ class PaymentVoucherController extends Controller
             'applicant_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', ['ajk', 'admin', 'setiausaha'])),
+                Rule::exists('users', 'id'),
             ],
             'recipient_name' => 'required|string|max:255',
             'recipient_phone' => 'required|string|max:50',

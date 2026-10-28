@@ -19,7 +19,7 @@ class UserController extends Controller
     }
 
     /**
-     * Mengemaskini Peranan (Role) AJK / Admin.
+     * Mengemaskini peranan, jawatan dan kebenaran kewangan pengguna.
      */
     public function updateRole(Request $request, $id)
     {
@@ -29,6 +29,8 @@ class UserController extends Controller
         $request->validate([
             'role' => 'required|in:admin,setiausaha,bendahari,ajk,penderma,user',
             'organization_position' => 'nullable|string|max:120',
+            'can_create_receipt' => 'nullable|boolean',
+            'can_create_voucher' => 'nullable|boolean',
         ]);
 
         $user->update([
@@ -36,8 +38,10 @@ class UserController extends Controller
             'organization_position' => filled($request->organization_position)
                 ? trim($request->organization_position)
                 : null,
+            'can_create_receipt' => $request->boolean('can_create_receipt'),
+            'can_create_voucher' => $request->boolean('can_create_voucher'),
         ]);
 
-        return redirect()->back()->with('success', "Peranan dan jawatan Warga Cakna bagi {$user->name} berjaya dikemas kini.");
+        return redirect()->back()->with('success', "Akaun dan kebenaran kewangan bagi {$user->name} berjaya dikemas kini.");
     }
 }

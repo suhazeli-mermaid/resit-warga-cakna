@@ -18,6 +18,10 @@ class PaymentVoucherPolicy
             return true;
         }
 
+        if ($user->canCreateVoucher() && $voucher->applicant_id === $user->id) {
+            return true;
+        }
+
         if ($user->isTreasurer()) {
             return in_array($voucher->status, [
                 PaymentVoucher::APPROVED,
@@ -39,7 +43,7 @@ class PaymentVoucherPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isSecretary() || $user->role === 'ajk';
+        return $user->canCreateVoucher();
     }
 
     public function update(User $user, PaymentVoucher $voucher): bool
@@ -48,8 +52,8 @@ class PaymentVoucherPolicy
             return false;
         }
 
-        return $user->isAdmin() || $user->isSecretary()
-            || ($user->role === 'ajk' && $voucher->applicant_id === $user->id);
+        return $user->isAdmin()
+            || ($user->canCreateVoucher() && $voucher->applicant_id === $user->id);
     }
 
     public function submit(User $user, PaymentVoucher $voucher): bool
@@ -60,7 +64,8 @@ class PaymentVoucherPolicy
     public function approve(User $user, PaymentVoucher $voucher): bool
     {
         return $voucher->status === PaymentVoucher::PENDING_APPROVAL
-            && ($user->isAdmin() || ($user->isSecretary() && $voucher->applicant_id !== $user->id));
+            && $voucher->applicant_id !== $user->id
+            && ($user->isAdmin() || $user->isSecretary());
     }
 
     public function issue(User $user, PaymentVoucher $voucher): bool

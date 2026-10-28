@@ -180,7 +180,7 @@ class FavouriteContactController extends Controller
     private function authorizeSelection(Request $request, string $usage): void
     {
         if ($usage === FavouriteContact::USAGE_DONOR) {
-            abort_unless($request->user()?->isAdmin(), 403);
+            abort_unless($request->user()?->canCreateReceipt(), 403);
 
             return;
         }

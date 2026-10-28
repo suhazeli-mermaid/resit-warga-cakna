@@ -34,6 +34,8 @@ class User extends Authenticatable
         'password',
         'role',
         'organization_position',
+        'can_create_receipt',
+        'can_create_voucher',
         'digital_signature_path',
         'digital_signature_checksum',
         'digital_signature_uploaded_at',
@@ -49,6 +51,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_create_receipt' => 'boolean',
+            'can_create_voucher' => 'boolean',
             'digital_signature_uploaded_at' => 'datetime',
         ];
     }
@@ -74,9 +78,20 @@ class User extends Authenticatable
         return $this->role === 'bendahari';
     }
 
+    public function canCreateReceipt(): bool
+    {
+        return $this->isAdmin() || $this->can_create_receipt === true;
+    }
+
+    public function canCreateVoucher(): bool
+    {
+        return $this->isAdmin() || $this->can_create_voucher === true;
+    }
+
     public function hasVoucherRole(): bool
     {
-        return in_array($this->role, ['admin', 'setiausaha', 'bendahari', 'ajk'], true);
+        return $this->canCreateVoucher()
+            || in_array($this->role, ['setiausaha', 'bendahari', 'ajk'], true);
     }
 
     public function paymentVouchers()

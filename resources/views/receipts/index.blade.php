@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-xl font-semibold leading-tight text-gray-800">{{ $isAdmin ? 'Pengurusan Resit' : 'Resit Saya' }}</h1>
-            @if($isAdmin)
+            @if(auth()->user()->canCreateReceipt())
                 <a href="{{ route('receipts.create') }}" class="inline-flex min-h-11 items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Cipta Resit</a>
             @endif
         </div>

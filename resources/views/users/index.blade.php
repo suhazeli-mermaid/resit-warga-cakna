@@ -97,6 +97,22 @@
                                                 <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                                             </select>
                                             <input type="text" name="organization_position" value="{{ $user->organization_position }}" maxlength="120" placeholder="Contoh: Pengerusi / Bendahari" class="rounded border-gray-300 px-2 py-1 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                            <fieldset class="rounded-md border border-gray-200 p-2 text-left">
+                                                <legend class="px-1 text-xs font-bold text-gray-700">Kebenaran Kewangan</legend>
+                                                <input type="hidden" name="can_create_receipt" value="0">
+                                                <label class="flex min-h-9 items-center gap-2 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_create_receipt" value="1" @checked($user->canCreateReceipt()) @disabled($user->isAdmin()) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    Boleh Cipta Resit
+                                                </label>
+                                                <input type="hidden" name="can_create_voucher" value="0">
+                                                <label class="flex min-h-9 items-center gap-2 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_create_voucher" value="1" @checked($user->canCreateVoucher()) @disabled($user->isAdmin()) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    Boleh Cipta Baucar
+                                                </label>
+                                                @if($user->isAdmin())
+                                                    <p class="mt-1 text-[11px] text-gray-500">Admin sentiasa dibenarkan.</p>
+                                                @endif
+                                            </fieldset>
                                             <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1 px-3 rounded text-xs transition">
                                                 Kemas Kini
                                             </button>
