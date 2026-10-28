@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PotentialDuplicateFavouriteException;
 use App\Models\DonationReceipt;
+use App\Models\FavouriteContact;
 use App\Services\DonationReceiptAuditService;
+use App\Services\FavouriteContactService;
 use App\Services\PaymentNotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -14,6 +17,7 @@ class DonationReceiptController extends Controller
     public function __construct(
         private PaymentNotificationService $notifications,
         private DonationReceiptAuditService $audits,
+        private FavouriteContactService $favouriteContacts,
     ) {}
 
     /**
@@ -125,11 +129,60 @@ class DonationReceiptController extends Controller
             'donated_at' => 'required|date|before_or_equal:today',
         ]);
 
+        $favourite = $request->validate([
+            'favourite_contact_id' => 'nullable|integer|exists:donors,id',
+            'save_as_favourite' => 'nullable|boolean',
+            'duplicate_contact_id' => 'nullable|integer|exists:donors,id',
+            'confirm_favourite_duplicate' => 'sometimes|accepted',
+        ]);
+
         $validated['receipt_no'] = 'REC-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
         $validated['status'] = DonationReceipt::STATUS_PENDING;
         $validated['user_id'] = $request->user()->id;
 
-        $receipt = DonationReceipt::create($validated);
+        try {
+            $receipt = DB::transaction(function () use ($validated, $favourite, $request) {
+                $receipt = DonationReceipt::create($validated);
+                $selected = null;
+
+                if (filled($favourite['favourite_contact_id'] ?? null)) {
+                    $selected = FavouriteContact::query()
+                        ->active()
+                        ->forUsage(FavouriteContact::USAGE_DONOR)
+                        ->findOrFail($favourite['favourite_contact_id']);
+                }
+
+                if ($request->boolean('save_as_favourite')) {
+                    $this->favouriteContacts->saveFromTransaction(
+                        data: [
+                            'name' => $receipt->donor_name,
+                            'identity_document' => $receipt->donor_ic_passport,
+                            'phone' => $receipt->donor_phone,
+                            'email' => $receipt->donor_email,
+                        ],
+                        usage: FavouriteContact::USAGE_DONOR,
+                        actor: $request->user(),
+                        selectedId: $selected?->id,
+                        confirmedDuplicateId: $request->boolean('confirm_favourite_duplicate')
+                            ? (int) ($favourite['duplicate_contact_id'] ?? 0)
+                            : null,
+                    );
+                } elseif ($selected) {
+                    $this->favouriteContacts->markUsed($selected);
+                }
+
+                return $receipt;
+            });
+        } catch (PotentialDuplicateFavouriteException $exception) {
+            return back()->withInput()->withErrors([
+                'save_as_favourite' => 'Favourite yang mungkin sama telah ditemui. Semak rekod dan sahkan jika anda mahu mengemas kini rekod tersebut.',
+            ])->with('favourite_duplicate_candidate', [
+                'id' => $exception->contact->id,
+                'name' => $exception->contact->name,
+                'phone' => $exception->contact->phone,
+                'email' => $exception->contact->email,
+            ]);
+        }
 
         $this->notifications->manualReceived($receipt);
 
@@ -295,7 +348,7 @@ class DonationReceiptController extends Controller
             return redirect()->back()->with('error', 'Resit rasmi hanya boleh dihantar selepas bayaran disahkan BERJAYA.');
         }
 
-        if ($this->notifications->resendReceipt($receipt)) {
+        if ($this->notifications->resendReceipt($receipt, resentBy: $request->user())) {
             return redirect()->back()->with('success', "Emel resit berjaya dihantar ke {$receipt->donor_email}.");
         }
 

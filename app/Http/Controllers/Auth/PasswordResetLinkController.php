@@ -65,65 +65,11 @@ class PasswordResetLinkController extends Controller
      */
     private function sendResetLinkSafely(array $credentials): ?string
     {
-        if (! $this->passwordResetMailCanBeDelivered()) {
-            return null;
-        }
-
         try {
             return Password::sendResetLink($credentials);
         } catch (Throwable) {
             // Do not log exceptions here: mail payloads may contain the reset token.
             return null;
         }
-    }
-
-    /**
-     * Prevent reset URLs and tokens from being written to application logs.
-     */
-    private function passwordResetMailCanBeDelivered(): bool
-    {
-        $mailer = (string) config('mail.default');
-        $transport = config("mail.mailers.{$mailer}.transport", $mailer);
-
-        if (app()->environment('testing') && $transport === 'array') {
-            return true;
-        }
-
-        return $this->mailerAvoidsLogging($mailer);
-    }
-
-    /**
-     * Reject direct or fallback log/array transports outside automated tests.
-     *
-     * @param  array<string>  $visited
-     */
-    private function mailerAvoidsLogging(string $mailer, array $visited = []): bool
-    {
-        if ($mailer === '' || in_array($mailer, $visited, true)) {
-            return false;
-        }
-
-        $visited[] = $mailer;
-        $configuration = config("mail.mailers.{$mailer}");
-
-        if (! is_array($configuration)) {
-            return false;
-        }
-
-        $transport = $configuration['transport'] ?? $mailer;
-
-        if (in_array($transport, ['log', 'array'], true)) {
-            return false;
-        }
-
-        if (in_array($transport, ['failover', 'roundrobin'], true)) {
-            foreach ($configuration['mailers'] ?? [] as $nestedMailer) {
-                if (! $this->mailerAvoidsLogging((string) $nestedMailer, $visited)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 }

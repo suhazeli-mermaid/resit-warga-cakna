@@ -41,10 +41,13 @@
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                                 {{ __('Admin Hub') }}
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.favourite-contacts.index')" :active="request()->routeIs('admin.favourite-contacts.*')">
+                                {{ __('Favourite Contacts') }}
+                            </x-nav-link>
                             <x-nav-link :href="route('admin.organization.edit')" :active="request()->routeIs('admin.organization.*')">
                                 {{ __('Tetapan Organisasi') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*')">
+                            <x-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*', 'admin.email-logs.*')">
                                 {{ __('Sistem') }}
                             </x-nav-link>
                         @endif
@@ -160,11 +163,17 @@
                     <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                         {{ __('Admin Hub') }}
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.favourite-contacts.index')" :active="request()->routeIs('admin.favourite-contacts.*')">
+                        {{ __('Favourite Contacts') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.organization.edit')" :active="request()->routeIs('admin.organization.*')">
                         {{ __('Tetapan Organisasi') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.updates.index')" :active="request()->routeIs('admin.updates.*')">
                         {{ __('Smart Update Manager') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.email-logs.index')" :active="request()->routeIs('admin.email-logs.*')">
+                        {{ __('Log E-mel') }}
                     </x-responsive-nav-link>
                 @endif
                 @if(Auth::user()->isAdmin() || Auth::user()->role === 'ajk')

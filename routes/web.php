@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\CampaignCmsController;
+use App\Http\Controllers\Admin\EmailLogController;
+use App\Http\Controllers\Admin\FavouriteContactController;
 use App\Http\Controllers\Admin\HomepageContentController;
 use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\SmartUpdateController;
@@ -78,6 +80,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::patch('/users/{id}/role', [UserController::class, 'updateRole'])->name('users.update-role');
 
+    // Unified Favourite Contact Registry. Search/prefill authorization is
+    // usage-aware; shared contact management remains Admin-only.
+    Route::get('/admin/favourite-contacts/search', [FavouriteContactController::class, 'search'])->name('admin.favourite-contacts.search');
+    Route::get('/admin/favourite-contacts/{favouriteContact}/prefill', [FavouriteContactController::class, 'prefill'])->name('admin.favourite-contacts.prefill');
+    Route::get('/admin/favourite-contacts', [FavouriteContactController::class, 'index'])->name('admin.favourite-contacts.index');
+    Route::get('/admin/favourite-contacts/create', [FavouriteContactController::class, 'create'])->name('admin.favourite-contacts.create');
+    Route::post('/admin/favourite-contacts', [FavouriteContactController::class, 'store'])->name('admin.favourite-contacts.store');
+    Route::get('/admin/favourite-contacts/{favouriteContact}/edit', [FavouriteContactController::class, 'edit'])->name('admin.favourite-contacts.edit');
+    Route::put('/admin/favourite-contacts/{favouriteContact}', [FavouriteContactController::class, 'update'])->name('admin.favourite-contacts.update');
+    Route::patch('/admin/favourite-contacts/{favouriteContact}/status', [FavouriteContactController::class, 'toggle'])->name('admin.favourite-contacts.toggle');
+
     // Modul Baucar Bayaran
     Route::get('/admin/kewangan/baucar', [PaymentVoucherController::class, 'dashboard'])->name('vouchers.dashboard');
     Route::get('/admin/kewangan/baucar/senarai', [PaymentVoucherController::class, 'index'])->name('vouchers.index');
@@ -117,6 +130,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/system/updates/{operation}/preflight', [SmartUpdateController::class, 'preflight'])->name('admin.updates.preflight');
     Route::post('/admin/system/updates/{operation}/backup', [SmartUpdateController::class, 'backup'])->name('admin.updates.backup');
     Route::post('/admin/system/updates/{operation}/install', [SmartUpdateController::class, 'install'])->name('admin.updates.install');
+
+    // Log E-mel — audit kekal dan resend type-aware untuk Admin sahaja.
+    Route::get('/admin/system/email-logs', [EmailLogController::class, 'index'])->name('admin.email-logs.index');
+    Route::get('/admin/system/email-logs/{emailLog}', [EmailLogController::class, 'show'])->name('admin.email-logs.show');
+    Route::post('/admin/system/email-logs/{emailLog}/resend', [EmailLogController::class, 'resend'])->name('admin.email-logs.resend');
 
     // Homepage Content Management & Signature Upload
     Route::get('/admin/homepage', [HomepageContentController::class, 'edit'])->name('admin.homepage.edit');

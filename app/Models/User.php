@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\Email\EmailDeliveryService;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -79,6 +82,33 @@ class User extends Authenticatable
     public function paymentVouchers()
     {
         return $this->hasMany(PaymentVoucher::class, 'applicant_id');
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        app(EmailDeliveryService::class)->sendNotification(
+            recipient: $this,
+            notification: new ResetPassword($token),
+            subject: __('Reset Password Notification'),
+            mailType: EmailLog::TYPE_PASSWORD_RESET,
+            relatedType: EmailLog::RELATED_USER,
+            relatedId: $this->id,
+            relatedReference: $this->email,
+            throwOnFailure: true,
+        );
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        app(EmailDeliveryService::class)->sendNotification(
+            recipient: $this,
+            notification: new VerifyEmail,
+            subject: __('Verify Email Address'),
+            mailType: EmailLog::TYPE_EMAIL_VERIFICATION,
+            relatedType: EmailLog::RELATED_USER,
+            relatedId: $this->id,
+            relatedReference: $this->email,
+        );
     }
 
     public function hasDigitalSignature(): bool

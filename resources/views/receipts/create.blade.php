@@ -9,6 +9,16 @@
                 @endif
                 <form action="{{ route('receipts.store') }}" method="POST" class="space-y-5 p-5 sm:p-6">
                     @csrf
+                    @include('favourite-contacts.selector', [
+                        'usage' => 'donor',
+                        'title' => 'Favourite Pembayar / Penderma',
+                        'fieldMap' => [
+                            'name' => 'donor_name',
+                            'identity_document' => 'donor_ic_passport',
+                            'phone' => 'donor_phone',
+                            'email' => 'donor_email',
+                        ],
+                    ])
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div><label class="mb-1 block text-sm font-bold" for="donor_name">Nama Penderma *</label><input id="donor_name" name="donor_name" required value="{{ old('donor_name') }}" class="min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"></div>
                         <div><label class="mb-1 block text-sm font-bold" for="donor_ic_passport">No. KP / Pasport</label><input id="donor_ic_passport" name="donor_ic_passport" value="{{ old('donor_ic_passport') }}" class="min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"></div>
@@ -20,6 +30,16 @@
                         <div><label class="mb-1 block text-sm font-bold" for="payment_reference">No. Rujukan Bayaran</label><input id="payment_reference" name="payment_reference" value="{{ old('payment_reference') }}" class="min-h-11 w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"></div>
                     </div>
                     <div><label class="mb-1 block text-sm font-bold" for="description">Tujuan / Catatan</label><textarea id="description" name="description" rows="3" class="w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">{{ old('description') }}</textarea></div>
+                    <label class="flex min-h-11 items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><input type="checkbox" name="save_as_favourite" value="1" @checked(old('save_as_favourite')) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"> ⭐ Simpan / kemas kini sebagai Favourite organisasi</label>
+                    @if(session('favourite_duplicate_candidate'))
+                        @php($candidate = session('favourite_duplicate_candidate'))
+                        <div class="rounded-lg border border-amber-400 bg-amber-50 p-4 text-sm text-amber-950">
+                            <p class="font-bold">Kemungkinan Favourite pendua: {{ $candidate['name'] }}</p>
+                            <p>{{ $candidate['phone'] ?: 'Tiada telefon' }} · {{ $candidate['email'] ?: 'Tiada e-mel' }}</p>
+                            <input type="hidden" name="duplicate_contact_id" value="{{ $candidate['id'] }}">
+                            <label class="mt-3 flex min-h-11 items-center gap-2 font-bold"><input type="checkbox" name="confirm_favourite_duplicate" value="1" class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"> Gunakan dan kemas kini Favourite sedia ada ini</label>
+                        </div>
+                    @endif
                     <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><a href="{{ route('receipts.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-gray-200 px-5 font-bold text-gray-800">Batal</a><button class="min-h-11 rounded-lg bg-emerald-700 px-5 font-bold text-white hover:bg-emerald-800">Simpan Transaksi</button></div>
                 </form>
             </div>

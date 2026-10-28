@@ -41,5 +41,6 @@
 
             @include('layouts.mobile-bottom-navigation')
         </div>
+        @stack('scripts')
     </body>
 </html>

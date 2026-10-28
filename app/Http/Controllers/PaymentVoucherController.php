@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PotentialDuplicateFavouriteException;
 use App\Exceptions\VoucherReadinessException;
+use App\Models\FavouriteContact;
 use App\Models\PaymentVoucher;
 use App\Models\User;
+use App\Services\FavouriteContactService;
 use App\Services\OrganizationBrandingService;
 use App\Services\PaymentVoucherAuditService;
 use App\Services\PaymentVoucherWorkflow;
@@ -30,6 +33,7 @@ class PaymentVoucherController extends Controller
         private readonly VoucherNotificationService $notifications,
         private readonly VoucherSnapshotService $snapshots,
         private readonly OrganizationBrandingService $branding,
+        private readonly FavouriteContactService $favouriteContacts,
     ) {}
 
     public function dashboard(Request $request)
@@ -96,24 +100,74 @@ class PaymentVoucherController extends Controller
     {
         Gate::authorize('create', PaymentVoucher::class);
         $validated = $this->validateVoucher($request);
+        $favourite = $request->validate([
+            'favourite_contact_id' => 'nullable|integer|exists:donors,id',
+            'save_as_favourite' => 'nullable|boolean',
+            'duplicate_contact_id' => 'nullable|integer|exists:donors,id',
+            'confirm_favourite_duplicate' => 'sometimes|accepted',
+        ]);
+        if ($request->boolean('save_as_favourite')) {
+            abort_unless($request->user()->isAdmin(), 403);
+        }
         $applicantId = ($request->user()->isAdmin() || $request->user()->isSecretary())
             ? (int) ($validated['applicant_id'] ?? $request->user()->id)
             : $request->user()->id;
 
-        $voucher = DB::transaction(function () use ($validated, $applicantId, $request) {
-            $date = Carbon::parse($validated['voucher_date'])->startOfDay();
-            $voucher = PaymentVoucher::query()->create(array_merge(
-                collect($validated)->except('applicant_id')->all(),
-                [
-                    'voucher_no' => $this->numbers->next($date),
-                    'status' => PaymentVoucher::DRAFT,
-                    'applicant_id' => $applicantId,
-                ],
-            ));
-            $this->audits->record($voucher, 'created', $request->user());
+        try {
+            $voucher = DB::transaction(function () use ($validated, $favourite, $applicantId, $request) {
+                $date = Carbon::parse($validated['voucher_date'])->startOfDay();
+                $voucher = PaymentVoucher::query()->create(array_merge(
+                    collect($validated)->except('applicant_id')->all(),
+                    [
+                        'voucher_no' => $this->numbers->next($date),
+                        'status' => PaymentVoucher::DRAFT,
+                        'applicant_id' => $applicantId,
+                    ],
+                ));
+                $this->audits->record($voucher, 'created', $request->user());
+                $selected = null;
 
-            return $voucher;
-        });
+                if (filled($favourite['favourite_contact_id'] ?? null)) {
+                    $selected = FavouriteContact::query()
+                        ->active()
+                        ->forUsage(FavouriteContact::USAGE_VOUCHER)
+                        ->findOrFail($favourite['favourite_contact_id']);
+                }
+
+                if ($request->boolean('save_as_favourite')) {
+                    $this->favouriteContacts->saveFromTransaction(
+                        data: [
+                            'name' => $voucher->recipient_name,
+                            'identity_document' => $voucher->recipient_ic,
+                            'phone' => $voucher->recipient_phone,
+                            'email' => $voucher->recipient_email,
+                            'address' => $voucher->recipient_address,
+                            'bank_name' => $voucher->bank_name,
+                            'bank_account_no' => $voucher->bank_account_no,
+                        ],
+                        usage: FavouriteContact::USAGE_VOUCHER,
+                        actor: $request->user(),
+                        selectedId: $selected?->id,
+                        confirmedDuplicateId: $request->boolean('confirm_favourite_duplicate')
+                            ? (int) ($favourite['duplicate_contact_id'] ?? 0)
+                            : null,
+                    );
+                } elseif ($selected) {
+                    $this->favouriteContacts->markUsed($selected);
+                }
+
+                return $voucher;
+            });
+        } catch (PotentialDuplicateFavouriteException $exception) {
+            return back()->withInput()->withErrors([
+                'save_as_favourite' => 'Favourite yang mungkin sama telah ditemui. Semak rekod dan sahkan jika anda mahu mengemas kini rekod tersebut.',
+            ])->with('favourite_duplicate_candidate', [
+                'id' => $exception->contact->id,
+                'name' => $exception->contact->name,
+                'phone' => $exception->contact->phone,
+                'email' => $exception->contact->email,
+            ]);
+        }
 
         return redirect()->route('vouchers.show', $voucher)->with('success', 'Draf baucar berjaya dicipta.');
     }
@@ -229,7 +283,7 @@ class PaymentVoucherController extends Controller
     {
         Gate::authorize('resendAcknowledgement', $voucher);
         [$voucher, $token] = $this->workflow->refreshAcknowledgementToken($voucher, $request->user());
-        $sent = $this->notifications->paymentConfirmed($voucher, $token);
+        $sent = $this->notifications->paymentConfirmed($voucher, $token, resentBy: $request->user());
         $this->audits->record(
             $voucher,
             $sent ? 'acknowledgement_sent' : 'acknowledgement_notification_failed',
