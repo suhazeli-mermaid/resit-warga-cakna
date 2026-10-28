@@ -36,6 +36,9 @@ class User extends Authenticatable
         'organization_position',
         'can_create_receipt',
         'can_create_voucher',
+        'can_approve_voucher',
+        'can_confirm_payment',
+        'can_manage_favourites',
         'digital_signature_path',
         'digital_signature_checksum',
         'digital_signature_uploaded_at',
@@ -53,6 +56,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'can_create_receipt' => 'boolean',
             'can_create_voucher' => 'boolean',
+            'can_approve_voucher' => 'boolean',
+            'can_confirm_payment' => 'boolean',
+            'can_manage_favourites' => 'boolean',
             'digital_signature_uploaded_at' => 'datetime',
         ];
     }
@@ -88,9 +94,26 @@ class User extends Authenticatable
         return $this->isAdmin() || $this->can_create_voucher === true;
     }
 
+    public function canApproveVoucher(): bool
+    {
+        return $this->isAdmin() || $this->can_approve_voucher === true;
+    }
+
+    public function canConfirmPayment(): bool
+    {
+        return $this->isAdmin() || $this->can_confirm_payment === true;
+    }
+
+    public function canManageFavourites(): bool
+    {
+        return $this->isAdmin() || $this->can_manage_favourites === true;
+    }
+
     public function hasVoucherRole(): bool
     {
         return $this->canCreateVoucher()
+            || $this->canApproveVoucher()
+            || $this->canConfirmPayment()
             || in_array($this->role, ['setiausaha', 'bendahari', 'ajk'], true);
     }
 

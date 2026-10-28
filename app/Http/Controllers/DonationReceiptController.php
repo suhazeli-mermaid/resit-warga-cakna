@@ -136,7 +136,7 @@ class DonationReceiptController extends Controller
             'confirm_favourite_duplicate' => 'sometimes|accepted',
         ]);
         if ($request->boolean('save_as_favourite')) {
-            abort_unless($request->user()->isAdmin(), 403);
+            abort_unless($request->user()->canManageFavourites(), 403);
         }
 
         $validated['receipt_no'] = 'REC-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));

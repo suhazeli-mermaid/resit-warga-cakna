@@ -169,17 +169,31 @@ class PaymentVoucher extends Model
             return $query;
         }
 
-        if ($user->isTreasurer()) {
-            return $query->whereIn('status', [
-                self::APPROVED,
-                self::ISSUED,
-                self::PAYMENT_CONFIRMED,
-                self::AWAITING_ACKNOWLEDGEMENT,
-                self::COMPLETED,
-                self::ARCHIVED,
-            ]);
-        }
+        return $query->where(function (Builder $visible) use ($user) {
+            $visible->where('applicant_id', $user->id);
 
-        return $query->where('applicant_id', $user->id);
+            if ($user->isTreasurer()) {
+                $visible->orWhereIn('status', [
+                    self::APPROVED,
+                    self::ISSUED,
+                    self::PAYMENT_CONFIRMED,
+                    self::AWAITING_ACKNOWLEDGEMENT,
+                    self::COMPLETED,
+                    self::ARCHIVED,
+                ]);
+            }
+
+            if ($user->canApproveVoucher()) {
+                $visible->orWhere('status', self::PENDING_APPROVAL);
+            }
+
+            if ($user->canConfirmPayment()) {
+                $visible->orWhereIn('status', [
+                    self::ISSUED,
+                    self::PAYMENT_CONFIRMED,
+                    self::AWAITING_ACKNOWLEDGEMENT,
+                ]);
+            }
+        });
     }
 }

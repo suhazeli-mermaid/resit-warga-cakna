@@ -100,14 +100,29 @@
                                             <fieldset class="rounded-md border border-gray-200 p-2 text-left">
                                                 <legend class="px-1 text-xs font-bold text-gray-700">Kebenaran Kewangan</legend>
                                                 <input type="hidden" name="can_create_receipt" value="0">
-                                                <label class="flex min-h-9 items-center gap-2 text-xs text-gray-700">
-                                                    <input type="checkbox" name="can_create_receipt" value="1" @checked($user->canCreateReceipt()) @disabled($user->isAdmin()) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
-                                                    Boleh Cipta Resit
+                                                <label class="flex min-h-9 items-start gap-2 py-1 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_create_receipt" value="1" @checked($user->canCreateReceipt()) @disabled($user->isAdmin()) class="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    <span><strong class="block">Boleh Cipta Resit</strong><span class="text-[11px] text-gray-500">Boleh mencipta resit manual dan memilih Favourite Pembayar/Penderma sedia ada.</span></span>
                                                 </label>
                                                 <input type="hidden" name="can_create_voucher" value="0">
-                                                <label class="flex min-h-9 items-center gap-2 text-xs text-gray-700">
-                                                    <input type="checkbox" name="can_create_voucher" value="1" @checked($user->canCreateVoucher()) @disabled($user->isAdmin()) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
-                                                    Boleh Cipta Baucar
+                                                <label class="flex min-h-9 items-start gap-2 py-1 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_create_voucher" value="1" @checked($user->canCreateVoucher()) @disabled($user->isAdmin()) class="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    <span><strong class="block">Boleh Cipta Baucar</strong><span class="text-[11px] text-gray-500">Boleh mencipta, mengemas kini dan menghantar Baucar sendiri untuk kelulusan.</span></span>
+                                                </label>
+                                                <input type="hidden" name="can_approve_voucher" value="0">
+                                                <label class="flex min-h-9 items-start gap-2 py-1 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_approve_voucher" value="1" @checked($user->canApproveVoucher()) @disabled($user->isAdmin()) class="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    <span><strong class="block">Boleh Lulus Baucar</strong><span class="text-[11px] text-gray-500">Boleh melulus atau menolak Baucar pengguna lain; Baucar sendiri tetap dilarang.</span></span>
+                                                </label>
+                                                <input type="hidden" name="can_confirm_payment" value="0">
+                                                <label class="flex min-h-9 items-start gap-2 py-1 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_confirm_payment" value="1" @checked($user->canConfirmPayment()) @disabled($user->isAdmin()) class="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    <span><strong class="block">Boleh Sahkan Bayaran</strong><span class="text-[11px] text-gray-500">Boleh merekod pengesahan bayaran Baucar dan memulakan aliran Akuan Penerimaan.</span></span>
+                                                </label>
+                                                <input type="hidden" name="can_manage_favourites" value="0">
+                                                <label class="flex min-h-9 items-start gap-2 py-1 text-xs text-gray-700">
+                                                    <input type="checkbox" name="can_manage_favourites" value="1" @checked($user->canManageFavourites()) @disabled($user->isAdmin()) class="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-500">
+                                                    <span><strong class="block">Boleh Urus Favourite</strong><span class="text-[11px] text-gray-500">Boleh menambah, mengemas kini dan menyahaktifkan Favourite Pembayar/Penerima organisasi.</span></span>
                                                 </label>
                                                 @if($user->isAdmin())
                                                     <p class="mt-1 text-[11px] text-gray-500">Admin sentiasa dibenarkan.</p>

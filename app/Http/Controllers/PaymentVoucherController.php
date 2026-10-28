@@ -110,7 +110,7 @@ class PaymentVoucherController extends Controller
             'confirm_favourite_duplicate' => 'sometimes|accepted',
         ]);
         if ($request->boolean('save_as_favourite')) {
-            abort_unless($request->user()->isAdmin(), 403);
+            abort_unless($request->user()->canManageFavourites(), 403);
         }
         $applicantId = $request->user()->isAdmin()
             ? (int) ($validated['applicant_id'] ?? $request->user()->id)

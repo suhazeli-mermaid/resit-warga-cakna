@@ -18,7 +18,7 @@ class FavouriteContactController extends Controller
 
     public function index(Request $request)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'usage' => ['nullable', Rule::in(['donor', 'voucher', 'both'])],
@@ -54,14 +54,14 @@ class FavouriteContactController extends Controller
 
     public function create(Request $request)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
 
         return view('admin.favourite-contacts.create');
     }
 
     public function store(Request $request)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
         $contact = $this->contacts->saveManaged($this->validatedContact($request), $request->user());
 
         return redirect()->route('admin.favourite-contacts.edit', $contact)
@@ -70,14 +70,14 @@ class FavouriteContactController extends Controller
 
     public function edit(Request $request, FavouriteContact $favouriteContact)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
 
         return view('admin.favourite-contacts.edit', ['contact' => $favouriteContact]);
     }
 
     public function update(Request $request, FavouriteContact $favouriteContact)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
         $this->contacts->saveManaged($this->validatedContact($request), $request->user(), $favouriteContact);
 
         return back()->with('success', 'Favourite berjaya dikemas kini. Rekod transaksi lama tidak berubah.');
@@ -85,7 +85,7 @@ class FavouriteContactController extends Controller
 
     public function toggle(Request $request, FavouriteContact $favouriteContact)
     {
-        $this->admin($request);
+        $this->authorizeManagement($request);
         $validated = $request->validate(['is_active' => ['required', 'boolean']]);
         $favouriteContact->forceFill([
             'is_active' => (bool) $validated['is_active'],
@@ -188,8 +188,8 @@ class FavouriteContactController extends Controller
         Gate::forUser($request->user())->authorize('create', PaymentVoucher::class);
     }
 
-    private function admin(Request $request): void
+    private function authorizeManagement(Request $request): void
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        abort_unless($request->user()?->canManageFavourites(), 403);
     }
 }

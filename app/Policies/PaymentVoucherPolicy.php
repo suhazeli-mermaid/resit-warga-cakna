@@ -22,6 +22,18 @@ class PaymentVoucherPolicy
             return true;
         }
 
+        if ($user->canApproveVoucher() && $voucher->status === PaymentVoucher::PENDING_APPROVAL) {
+            return true;
+        }
+
+        if ($user->canConfirmPayment() && in_array($voucher->status, [
+            PaymentVoucher::ISSUED,
+            PaymentVoucher::PAYMENT_CONFIRMED,
+            PaymentVoucher::AWAITING_ACKNOWLEDGEMENT,
+        ], true)) {
+            return true;
+        }
+
         if ($user->isTreasurer()) {
             return in_array($voucher->status, [
                 PaymentVoucher::APPROVED,
@@ -38,7 +50,7 @@ class PaymentVoucherPolicy
 
     public function viewSensitive(User $user, PaymentVoucher $voucher): bool
     {
-        return $this->view($user, $voucher) && ($user->isAdmin() || $user->isTreasurer());
+        return $this->view($user, $voucher) && $user->canConfirmPayment();
     }
 
     public function create(User $user): bool
@@ -65,7 +77,7 @@ class PaymentVoucherPolicy
     {
         return $voucher->status === PaymentVoucher::PENDING_APPROVAL
             && $voucher->applicant_id !== $user->id
-            && ($user->isAdmin() || $user->isSecretary());
+            && $user->canApproveVoucher();
     }
 
     public function issue(User $user, PaymentVoucher $voucher): bool
@@ -81,13 +93,13 @@ class PaymentVoucherPolicy
             PaymentVoucher::PAYMENT_CONFIRMED,
             PaymentVoucher::AWAITING_ACKNOWLEDGEMENT,
         ], true)
-            && ($user->isAdmin() || $user->isTreasurer());
+            && $user->canConfirmPayment();
     }
 
     public function resendAcknowledgement(User $user, PaymentVoucher $voucher): bool
     {
         return $voucher->status === PaymentVoucher::AWAITING_ACKNOWLEDGEMENT
-            && ($user->isAdmin() || $user->isTreasurer()
+            && ($user->canConfirmPayment()
                 || ($user->role === 'ajk' && $voucher->applicant_id === $user->id));
     }
 

@@ -22,7 +22,7 @@ class FavouriteContactService
         ?int $selectedId = null,
         ?int $confirmedDuplicateId = null,
     ): FavouriteContact {
-        abort_unless($actor->isAdmin(), 403);
+        abort_unless($actor->canManageFavourites(), 403);
 
         return DB::transaction(function () use ($data, $usage, $actor, $selectedId, $confirmedDuplicateId) {
             if ($selectedId) {
@@ -67,7 +67,7 @@ class FavouriteContactService
 
     public function saveManaged(array $data, User $actor, ?FavouriteContact $contact = null): FavouriteContact
     {
-        abort_unless($actor->isAdmin(), 403);
+        abort_unless($actor->canManageFavourites(), 403);
         $duplicate = $this->findDuplicate($data, $contact?->id);
         if ($duplicate) {
             throw ValidationException::withMessages([

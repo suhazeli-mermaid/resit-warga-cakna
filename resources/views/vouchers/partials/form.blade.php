@@ -79,10 +79,10 @@
     </div>
 </div>
 @unless(isset($voucher))
-    @if(auth()->user()->isAdmin())
+    @if(auth()->user()->canManageFavourites())
         <label class="mt-6 flex min-h-11 items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><input type="checkbox" name="save_as_favourite" value="1" @checked(old('save_as_favourite')) class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"> ⭐ Simpan / kemas kini sebagai Favourite organisasi</label>
     @endif
-    @if(session('favourite_duplicate_candidate'))
+    @if(auth()->user()->canManageFavourites() && session('favourite_duplicate_candidate'))
         @php($candidate = session('favourite_duplicate_candidate'))
         <div class="mt-4 rounded-lg border border-amber-400 bg-amber-50 p-4 text-sm text-amber-950">
             <p class="font-bold">Kemungkinan Favourite pendua: {{ $candidate['name'] }}</p>
