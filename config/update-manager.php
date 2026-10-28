@@ -21,6 +21,8 @@ return [
     ],
     'database_backup' => [
         'enabled' => env('UPDATE_DATABASE_BACKUP_ENABLED', false),
+        'connection' => null,
         'mysqldump_binary' => env('UPDATE_MYSQLDUMP_BINARY', '/usr/bin/mysqldump'),
+        'no_tablespaces' => env('UPDATE_MYSQLDUMP_NO_TABLESPACES', false),
     ],
 ];

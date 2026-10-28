@@ -77,7 +77,7 @@ class SmartUpdateManager
     public function preflight(UpdateOperation $operation): UpdateOperation
     {
         $this->ensureEnabled();
-        if (! in_array($operation->status, ['checked', 'preflight_failed'], true)) {
+        if (! in_array($operation->status, ['checked', 'preflight_failed', 'backup_failed'], true)) {
             throw new RuntimeException('Operasi ini tidak bersedia untuk preflight.');
         }
 
@@ -113,13 +113,59 @@ class SmartUpdateManager
             DB::select('select 1');
             $databaseOk = true;
             $databaseDetail = DB::connection()->getDriverName().' / '.$this->databaseVersion();
-        } catch (Throwable $e) {
+        } catch (Throwable) {
             $databaseOk = false;
-            $databaseDetail = $e->getMessage();
+            $databaseDetail = 'Sambungan pangkalan data gagal; butiran sensitif tidak direkodkan.';
         }
         $checks[] = $this->checkResult('database', $databaseOk, 'Sambungan dan versi pangkalan data.', $databaseDetail);
 
         $details = $operation->details ?? [];
+        if (($details['migrations'] ?? []) !== []) {
+            try {
+                $databaseBackup = $this->databaseBackup->preflight();
+            } catch (Throwable) {
+                $databaseBackup = [
+                    'supported' => false,
+                    'enabled' => false,
+                    'binary' => ['required' => true, 'path' => '', 'exists' => false, 'executable' => false, 'available' => false],
+                    'destination' => ['path' => 'update-backups', 'writable' => false],
+                    'storage' => ['free_bytes' => false, 'minimum_free_bytes' => (int) config('update-manager.minimum_free_bytes'), 'sufficient' => false],
+                    'configuration' => ['available' => false, 'missing' => ['unavailable']],
+                ];
+            }
+            $checks[] = $this->checkResult(
+                'database_backup_enabled',
+                $databaseBackup['enabled'],
+                'Backup pangkalan data mesti diaktifkan apabila kemas kini mengandungi migrasi.',
+            );
+            $checks[] = $this->checkResult(
+                'mysqldump_binary',
+                $databaseBackup['binary']['available'],
+                $databaseBackup['binary']['required']
+                    ? 'Binary mysqldump mesti wujud dan boleh dilaksanakan.'
+                    : 'Binary mysqldump tidak diperlukan untuk driver ini.',
+                $databaseBackup['binary'],
+            );
+            $checks[] = $this->checkResult(
+                'database_backup_destination',
+                $databaseBackup['destination']['writable'],
+                'Destinasi backup pangkalan data mesti boleh ditulis.',
+                $databaseBackup['destination'],
+            );
+            $checks[] = $this->checkResult(
+                'database_backup_space',
+                $databaseBackup['storage']['sufficient'],
+                'Ruang bebas mesti melepasi had minimum backup.',
+                $databaseBackup['storage'],
+            );
+            $checks[] = $this->checkResult(
+                'database_backup_configuration',
+                $databaseBackup['supported'] && $databaseBackup['configuration']['available'],
+                'Konfigurasi pangkalan data yang diperlukan mesti tersedia.',
+                $databaseBackup['configuration'],
+            );
+        }
+
         $protected = $details['protected_files'] ?? [];
         $checks[] = $this->checkResult('protected_files', $protected === [], 'Fail terlindung tidak boleh diubah.', $protected);
 
@@ -159,49 +205,75 @@ class SmartUpdateManager
             throw new RuntimeException('Backup hanya boleh dibuat selepas preflight lulus.');
         }
 
-        $relative = 'update-backups/code-'.$operation->public_id.'.zip';
-        $absolute = Storage::disk(config('update-manager.backup_disk'))->path($relative);
-        $directory = dirname($absolute);
-        if (! is_dir($directory) && ! mkdir($directory, 0700, true) && ! is_dir($directory)) {
-            throw new RuntimeException('Direktori backup kod tidak dapat dicipta.');
-        }
+        try {
+            $relative = 'update-backups/code-'.$operation->public_id.'.zip';
+            $absolute = Storage::disk(config('update-manager.backup_disk'))->path($relative);
+            $directory = dirname($absolute);
+            if (! is_dir($directory) && ! mkdir($directory, 0700, true) && ! is_dir($directory)) {
+                throw new RuntimeException('Direktori backup kod tidak dapat dicipta.');
+            }
 
-        $archive = $this->runner->run(['git', 'archive', '--format=zip', '--output='.$absolute, $operation->current_commit], 300);
-        if (! $archive['successful'] || ! is_file($absolute) || filesize($absolute) < 100) {
-            throw new RuntimeException('Backup kod gagal dihasilkan.');
-        }
+            $archive = $this->runner->run(['git', 'archive', '--format=zip', '--output='.$absolute, $operation->current_commit], 300);
+            if (! $archive['successful'] || ! is_file($absolute) || filesize($absolute) < 100) {
+                throw new RuntimeException('Backup kod gagal dihasilkan.');
+            }
 
-        $zip = new ZipArchive;
-        $zipOk = $zip->open($absolute, ZipArchive::CHECKCONS) === true && $zip->numFiles > 0;
-        if ($zipOk) {
-            $zip->close();
-        }
-        if (! $zipOk) {
-            throw new RuntimeException('Arkib backup kod gagal pengesahan integriti.');
-        }
+            $zip = new ZipArchive;
+            $zipOk = $zip->open($absolute, ZipArchive::CHECKCONS) === true && $zip->numFiles > 0;
+            if ($zipOk) {
+                $zip->close();
+            }
+            if (! $zipOk) {
+                throw new RuntimeException('Arkib backup kod gagal pengesahan integriti.');
+            }
 
-        $codeChecksum = hash_file('sha256', $absolute);
-        $database = null;
-        if (($operation->details['migrations'] ?? []) !== []) {
-            $database = $this->databaseBackup->create($operation->public_id);
+            $codeChecksum = hash_file('sha256', $absolute);
+            $database = null;
+            if (($operation->details['migrations'] ?? []) !== []) {
+                $database = $this->databaseBackup->create($operation->public_id);
+            }
+
+            $details = $operation->details ?? [];
+            $details['backup'] = [
+                'code' => ['verified' => true, 'path' => $relative, 'checksum' => $codeChecksum],
+                'database' => $database ?? ['verified' => false, 'not_required' => true],
+            ];
+            $operation->forceFill([
+                'status' => 'backup_verified',
+                'code_backup_path' => $relative,
+                'code_backup_checksum' => $codeChecksum,
+                'database_backup_path' => $database['path'] ?? null,
+                'database_backup_checksum' => $database['checksum'] ?? null,
+                'backup_verified_at' => now(),
+                'failure_message' => null,
+                'details' => $details,
+            ])->save();
+
+            return $operation->fresh();
+        } catch (Throwable) {
+            if (isset($absolute) && is_file($absolute)) {
+                @unlink($absolute);
+            }
+            $details = $operation->details ?? [];
+            $details['backup'] = [
+                'code' => ['verified' => false],
+                'database' => ['verified' => false],
+                'failure' => 'Backup kod atau pangkalan data gagal pengesahan.',
+            ];
+            $operation->forceFill([
+                'status' => 'backup_failed',
+                'code_backup_path' => null,
+                'code_backup_checksum' => null,
+                'database_backup_path' => null,
+                'database_backup_checksum' => null,
+                'preflight_passed_at' => null,
+                'backup_verified_at' => null,
+                'failure_message' => 'Backup kod atau pangkalan data gagal pengesahan. Pemasangan disekat.',
+                'details' => $details,
+            ])->save();
+
+            throw new RuntimeException('Backup kod atau pangkalan data gagal pengesahan. Pemasangan disekat.');
         }
-
-        $details = $operation->details ?? [];
-        $details['backup'] = [
-            'code' => ['verified' => true, 'path' => $relative, 'checksum' => $codeChecksum],
-            'database' => $database ?? ['verified' => false, 'not_required' => true],
-        ];
-        $operation->forceFill([
-            'status' => 'backup_verified',
-            'code_backup_path' => $relative,
-            'code_backup_checksum' => $codeChecksum,
-            'database_backup_path' => $database['path'] ?? null,
-            'database_backup_checksum' => $database['checksum'] ?? null,
-            'backup_verified_at' => now(),
-            'details' => $details,
-        ])->save();
-
-        return $operation->fresh();
     }
 
     public function install(UpdateOperation $operation, User $actor): UpdateOperation
