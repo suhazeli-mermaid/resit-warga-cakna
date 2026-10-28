@@ -114,7 +114,9 @@ class DonationReceipt extends Model
     {
         return match ($this->status) {
             self::STATUS_COMPLETED => 'BERJAYA',
-            self::STATUS_PENDING => 'TUNGGU PENGESAHAN',
+            self::STATUS_PENDING => $this->usesBillplz()
+                ? 'MENUNGGU PEMBAYARAN'
+                : 'TUNGGU PENGESAHAN',
             self::STATUS_REJECTED => 'DITOLAK',
             self::STATUS_FAILED => 'GAGAL',
             default => strtoupper((string) $this->status),

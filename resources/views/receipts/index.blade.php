@@ -22,7 +22,7 @@
             @if($isAdmin)
                 @php
                     $filters = [
-                        'all' => 'Semua', 'pending' => 'Tunggu Pengesahan', 'completed' => 'Berjaya',
+                        'all' => 'Semua', 'pending' => 'Menunggu', 'completed' => 'Berjaya',
                         'rejected' => 'Ditolak', 'failed' => 'Gagal', 'archived' => 'Diarkibkan', 'deleted' => 'Dihapus',
                     ];
                 @endphp
@@ -31,7 +31,7 @@
                         @foreach($filters as $value => $label)
                             <a href="{{ route('receipts.index', ['filter' => $value]) }}" @if($filter === $value) aria-current="page" @endif
                                class="inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-bold {{ $filter === $value ? 'border-emerald-800 bg-emerald-800 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-600 hover:text-emerald-800' }}">
-                                {{ $label }}
+                                {{ $label }} ({{ $filterCounts[$value] ?? 0 }})
                             </a>
                         @endforeach
                     </div>

@@ -42,10 +42,13 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-2 border-b pb-4">Borang Sumbangan Derma</h2>
             <p class="text-xs text-gray-500 mb-6">Sila lengkapkan maklumat di bawah untuk menyumbang kepada <strong>{{ $campaign->title }}</strong>.</p>
 
-            <form action="{{ route('public.donate.process') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form action="{{ route('public.donate.process') }}" method="POST" enctype="multipart/form-data" class="space-y-6"
+                  x-data="{ submitting: false }"
+                  @submit="if (submitting) { $event.preventDefault() } else { submitting = true }">
                 @csrf
                 <input type="hidden" name="campaign_id" value="{{ $campaign->slug ?? $campaign->id }}">
                 <input type="hidden" name="description" value="Sumbangan Bagi {{ $campaign->title }}">
+                <input type="hidden" name="submission_token" value="{{ old('submission_token', \Illuminate\Support\Str::random(64)) }}">
 
                 <!-- PRESET JUMLAH SUMBANGAN (DEFAULT AMOUNT 0) -->
                 <div>
@@ -142,8 +145,9 @@
 
                 <!-- BUTANG SUBMIT -->
                 <div class="pt-4">
-                    <button type="submit" class="w-full bg-[#046a38] hover:bg-[#03522b] text-white font-bold py-3.5 px-6 rounded-xl transition duration-150 shadow-sm text-base">
-                        Teruskan Pembayaran Sumbangan &rarr;
+                    <button type="submit" :disabled="submitting" class="w-full bg-[#046a38] hover:bg-[#03522b] disabled:cursor-wait disabled:opacity-70 text-white font-bold py-3.5 px-6 rounded-xl transition duration-150 shadow-sm text-base">
+                        <span x-show="!submitting">Teruskan Pembayaran Sumbangan &rarr;</span>
+                        <span x-cloak x-show="submitting">Sedang diproses...</span>
                     </button>
                 </div>
             </form>

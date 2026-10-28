@@ -11,6 +11,7 @@ use App\Services\Billplz\BillplzPaymentService;
 use App\Services\DonationReceiptAuditService;
 use App\Services\PaymentNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -109,6 +110,7 @@ class PublicDonationController extends Controller
             ],
             'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
             'description' => 'nullable|string|max:255',
+            'submission_token' => 'required|string|size:64',
         ]);
 
         $campaign = Campaign::query()
@@ -122,6 +124,11 @@ class PublicDonationController extends Controller
 
         if ($validated['payment_method'] === 'toyyibpay' && ! $this->toyyibPayIsConfigured()) {
             return back()->withInput()->with('error', 'Konfigurasi ToyyibPay belum lengkap. Sila pilih kaedah bayaran manual atau hubungi pentadbir.');
+        }
+
+        $submissionKey = 'donation-submission:'.hash('sha256', $validated['submission_token']);
+        if (! Cache::add($submissionKey, true, now()->addMinutes(30))) {
+            return back()->with('error', 'Permohonan pembayaran ini telah diproses. Jangan hantar borang yang sama berulang kali.');
         }
 
         $proofPath = null;

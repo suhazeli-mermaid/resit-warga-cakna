@@ -111,6 +111,35 @@ class BillplzPaymentTest extends TestCase
     }
 
     #[Test]
+    public function the_same_public_form_submission_creates_only_one_bill_and_receipt(): void
+    {
+        Http::fake([
+            'https://www.billplz-sandbox.com/api/v3/bills' => Http::response([
+                'id' => self::BILL_ID,
+                'collection_id' => self::COLLECTION_ID,
+                'url' => 'https://www.billplz-sandbox.com/bills/'.self::BILL_ID,
+            ]),
+        ]);
+
+        $campaign = $this->campaign();
+        $form = $this->get(route('public.show', $campaign->id))->assertOk()->getContent();
+        $this->assertSame(1, preg_match('/name="submission_token" value="([^"]+)"/', $form, $matches));
+        $this->assertStringContainsString('submitting: false', $form);
+        $payload = $this->donationPayload($campaign);
+        $payload['submission_token'] = $matches[1];
+
+        $this->post(route('public.donate.process'), $payload)
+            ->assertRedirect('https://www.billplz-sandbox.com/bills/'.self::BILL_ID);
+        $this->from(route('public.show', $campaign->id))
+            ->post(route('public.donate.process'), $payload)
+            ->assertRedirect(route('public.show', $campaign->id))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('donation_receipts', 1);
+        Http::assertSentCount(1);
+    }
+
+    #[Test]
     public function a_valid_signed_callback_completes_payment_and_increments_campaign_once(): void
     {
         Mail::fake();
@@ -321,6 +350,7 @@ class BillplzPaymentTest extends TestCase
             'amount' => $amount,
             'payment_method' => DonationReceipt::GATEWAY_BILLPLZ,
             'description' => 'Sumbangan ujian Billplz',
+            'submission_token' => str()->random(64),
         ];
     }
 

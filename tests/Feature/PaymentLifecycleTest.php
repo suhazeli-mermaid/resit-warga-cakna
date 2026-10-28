@@ -233,6 +233,7 @@ class PaymentLifecycleTest extends TestCase
                 'transaction_reference' => $reference,
                 'transaction_date' => '2026-07-16',
                 'description' => 'Sumbangan ujian',
+                'submission_token' => str()->random(64),
             ];
 
             if ($method === 'qr_pay') {

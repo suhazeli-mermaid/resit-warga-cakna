@@ -29,6 +29,20 @@ class DonationReceiptController extends Controller
             $filter = 'all';
         }
 
+        $filterCounts = [];
+        if ($isAdmin) {
+            $activeReceipts = DonationReceipt::query()->whereNull('archived_at');
+            $filterCounts = [
+                'all' => (clone $activeReceipts)->count(),
+                'pending' => (clone $activeReceipts)->where('status', DonationReceipt::STATUS_PENDING)->count(),
+                'completed' => (clone $activeReceipts)->where('status', DonationReceipt::STATUS_COMPLETED)->count(),
+                'rejected' => (clone $activeReceipts)->where('status', DonationReceipt::STATUS_REJECTED)->count(),
+                'failed' => (clone $activeReceipts)->where('status', DonationReceipt::STATUS_FAILED)->count(),
+                'archived' => DonationReceipt::query()->whereNotNull('archived_at')->count(),
+                'deleted' => DonationReceipt::onlyTrashed()->count(),
+            ];
+        }
+
         $query = $filter === 'deleted' && $isAdmin
             ? DonationReceipt::onlyTrashed()->with('latestAudit')
             : DonationReceipt::query()->with('latestAudit');
@@ -60,7 +74,7 @@ class DonationReceiptController extends Controller
         $sort = $request->input('sort', 'latest');
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('donated_at', 'asc');
+                $query->orderByRaw('COALESCE(donated_at, created_at) ASC')->orderBy('id');
                 break;
             case 'amount_high':
                 $query->orderBy('amount', 'desc');
@@ -70,13 +84,16 @@ class DonationReceiptController extends Controller
                 break;
             case 'latest':
             default:
-                $query->orderBy('donated_at', 'desc')->orderBy('id', 'desc');
+                // Pending online payments have no donation date until their
+                // authoritative gateway callback. Use creation time meanwhile
+                // so legitimate new gateway receipts are not buried at the end.
+                $query->orderByRaw('COALESCE(donated_at, created_at) DESC')->orderBy('id', 'desc');
                 break;
         }
 
         $receipts = $query->paginate(15)->withQueryString();
 
-        return view('receipts.index', compact('receipts', 'filter', 'isAdmin'));
+        return view('receipts.index', compact('receipts', 'filter', 'filterCounts', 'isAdmin'));
     }
 
     /**
