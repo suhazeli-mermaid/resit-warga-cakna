@@ -58,9 +58,10 @@
 
         <section class="box details">
             <div><div class="label">No. Baucar</div><div class="value">{{ $voucher->voucher_no }}</div></div>
-            <div><div class="label">Jumlah</div><div class="value">RM {{ number_format($voucher->paid_amount, 2) }}</div></div>
+            <div><div class="label">Jumlah</div><div class="value">RM {{ number_format($voucher->paid_amount ?? $voucher->amount, 2) }}</div></div>
             <div><div class="label">Tarikh Transaksi</div><div class="value">{{ $voucher->transaction_date?->format('d/m/Y') }}</div></div>
             <div><div class="label">Tarikh Akuan</div><div class="value">{{ $acknowledgement->used_at?->format('d/m/Y H:i:s') }}</div></div>
+            @if($voucher->transaction_reference)<div style="grid-column:1/-1"><div class="label">Rujukan Transaksi</div><div class="value">{{ $voucher->transaction_reference }}</div></div>@endif
             <div style="grid-column:1/-1"><div class="label">Tujuan</div><div class="value">{{ $voucher->purpose }}</div></div>
             @if($acknowledgement->notes)<div style="grid-column:1/-1"><div class="label">Catatan</div><div>{{ $acknowledgement->notes }}</div></div>@endif
         </section>

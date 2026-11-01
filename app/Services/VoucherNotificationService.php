@@ -81,20 +81,32 @@ class VoucherNotificationService
                 'email' => $voucher->recipient_email,
                 'name' => $voucher->recipient_name,
                 'type' => EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_RECIPIENT,
+                'audience' => 'recipient',
             ],
             [
                 'email' => $voucher->applicant?->email,
                 'name' => $voucher->applicant?->name,
                 'type' => EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_APPLICANT,
+                'audience' => 'applicant',
             ],
-        ])->filter(fn ($recipient) => filter_var($recipient['email'], FILTER_VALIDATE_EMAIL))
+        ])->merge($this->adminEmails()->map(fn ($email) => [
+            'email' => $email,
+            'name' => $this->nameForEmail((string) $email),
+            'type' => EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_ADMIN,
+            'audience' => 'admin',
+        ]))->filter(fn ($recipient) => filter_var($recipient['email'], FILTER_VALIDATE_EMAIL))
             ->unique(fn ($recipient) => strtolower((string) $recipient['email']));
 
         foreach ($recipients as $recipient) {
             $this->delivery->sendMailable(
                 $recipient['email'],
                 $recipient['name'],
-                new VoucherNotificationMail($voucher, 'acknowledgement_completed'),
+                new VoucherNotificationMail(
+                    $voucher,
+                    'acknowledgement_completed',
+                    acknowledgement: $acknowledgement,
+                    audience: $recipient['audience'],
+                ),
                 $recipient['type'],
                 EmailLog::RELATED_ACKNOWLEDGEMENT,
                 $acknowledgement->id,
@@ -149,11 +161,11 @@ class VoucherNotificationService
         if ($log->mail_type === EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_RECIPIENT) {
             return $this->sendAcknowledgementCompleted(
                 $voucher,
-                $acknowledgement->id,
-                $acknowledgement->acknowledgement_no,
+                $acknowledgement,
                 $voucher->recipient_email,
                 $voucher->recipient_name,
                 $log->mail_type,
+                'recipient',
                 $log,
                 $actor,
             );
@@ -163,11 +175,25 @@ class VoucherNotificationService
             && $voucher->applicant?->email) {
             return $this->sendAcknowledgementCompleted(
                 $voucher,
-                $acknowledgement->id,
-                $acknowledgement->acknowledgement_no,
+                $acknowledgement,
                 $voucher->applicant->email,
                 $voucher->applicant->name,
                 $log->mail_type,
+                'applicant',
+                $log,
+                $actor,
+            );
+        }
+
+        if ($log->mail_type === EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_ADMIN
+            && $this->isCurrentAdminEmail($log->recipient_email)) {
+            return $this->sendAcknowledgementCompleted(
+                $voucher,
+                $acknowledgement,
+                $log->recipient_email,
+                $this->nameForEmail($log->recipient_email),
+                $log->mail_type,
+                'admin',
                 $log,
                 $actor,
             );
@@ -200,22 +226,27 @@ class VoucherNotificationService
 
     private function sendAcknowledgementCompleted(
         PaymentVoucher $voucher,
-        int $acknowledgementId,
-        string $reference,
+        VoucherAcknowledgement $acknowledgement,
         string $email,
         ?string $name,
         string $mailType,
+        string $audience,
         EmailLog $resendOf,
         User $resentBy,
     ): bool {
         return $this->delivery->sendMailable(
             $email,
             $name,
-            new VoucherNotificationMail($voucher, 'acknowledgement_completed'),
+            new VoucherNotificationMail(
+                $voucher,
+                'acknowledgement_completed',
+                acknowledgement: $acknowledgement,
+                audience: $audience,
+            ),
             $mailType,
             EmailLog::RELATED_ACKNOWLEDGEMENT,
-            $acknowledgementId,
-            $reference,
+            $acknowledgement->id,
+            $acknowledgement->acknowledgement_no,
             $resendOf,
             $resentBy,
         );

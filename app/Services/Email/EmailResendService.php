@@ -44,7 +44,8 @@ class EmailResendService
             EmailLog::TYPE_ACKNOWLEDGEMENT_REQUEST => $this->resendAcknowledgementRequest($original, $actor),
 
             EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_RECIPIENT,
-            EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_APPLICANT => $this->vouchers->resendCompletedAcknowledgement($original, $actor),
+            EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_APPLICANT,
+            EmailLog::TYPE_ACKNOWLEDGEMENT_COMPLETED_ADMIN => $this->vouchers->resendCompletedAcknowledgement($original, $actor),
 
             EmailLog::TYPE_PASSWORD_RESET => $this->resendPasswordReset($original, $actor),
             EmailLog::TYPE_EMAIL_VERIFICATION => $this->resendEmailVerification($original, $actor),

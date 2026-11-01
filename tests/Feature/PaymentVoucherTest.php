@@ -238,7 +238,7 @@ class PaymentVoucherTest extends TestCase
         $this->actingAs($applicant)->get(route('vouchers.acknowledgements.pdf', $acknowledgement))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
-        $this->assertSame(2, Mail::sent(VoucherNotificationMail::class, fn ($mail) => $mail->event === 'acknowledgement_completed')->count());
+        $this->assertSame(3, Mail::sent(VoucherNotificationMail::class, fn ($mail) => $mail->event === 'acknowledgement_completed')->count());
     }
 
     public function test_duplicate_payment_confirmation_is_idempotent_and_does_not_duplicate_token_or_email(): void
@@ -335,7 +335,9 @@ class PaymentVoucherTest extends TestCase
         $this->assertNotSame($oldToken, $newToken);
         $this->assertSame(1, $voucher->acknowledgements()->count());
         $this->assertSame($acknowledgementId, $voucher->acknowledgements()->sole()->id);
-        $this->get(route('vouchers.acknowledgement.show', $oldToken))->assertNotFound();
+        $this->get(route('vouchers.acknowledgement.show', $oldToken))
+            ->assertNotFound()
+            ->assertSeeText('Pautan ini tidak sah atau telah digantikan.');
         $this->get(route('vouchers.acknowledgement.show', $newToken))->assertOk();
         $this->assertDatabaseHas('payment_voucher_audits', [
             'payment_voucher_id' => $voucher->id,

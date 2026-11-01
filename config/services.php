@@ -55,6 +55,12 @@ return [
         'admin_email' => env('ADMIN_NOTIFICATION_EMAIL'),
     ],
 
+    'vouchers' => [
+        // May point at the public donation subdomain when the authenticated
+        // administration portal is served from a different host.
+        'public_url' => env('VOUCHER_PUBLIC_URL', env('APP_URL')),
+    ],
+
     'bank' => [
         'name' => 'Maybank Islamic',
         'account_no' => '563037065007',

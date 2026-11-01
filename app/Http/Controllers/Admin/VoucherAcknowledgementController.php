@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\VoucherAcknowledgement;
 use App\Services\OrganizationBrandingService;
+use App\Services\VoucherAcknowledgementPdfService;
 use App\Services\VoucherSnapshotService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +17,7 @@ class VoucherAcknowledgementController extends Controller
     public function __construct(
         private readonly VoucherSnapshotService $snapshots,
         private readonly OrganizationBrandingService $branding,
+        private readonly VoucherAcknowledgementPdfService $pdfDocuments,
     ) {}
 
     public function index(Request $request)
@@ -95,13 +96,8 @@ class VoucherAcknowledgementController extends Controller
     {
         Gate::authorize('view', $acknowledgement);
         abort_unless($acknowledgement->used_at !== null, 409, 'Surat akuan hanya tersedia selepas penerima membuat akuan.');
-        $acknowledgement->load('voucher');
 
-        return Pdf::loadView('pdf.voucher-acknowledgement', [
-            'voucher' => $acknowledgement->voucher,
-            'acknowledgement' => $acknowledgement,
-            'images' => $this->snapshots->documentImages($acknowledgement->voucher),
-            'branding' => $this->branding->documentBranding(),
-        ])->setPaper('a4')->download("Akuan-{$acknowledgement->acknowledgement_no}.pdf");
+        return $this->pdfDocuments->make($acknowledgement)
+            ->download($this->pdfDocuments->filename($acknowledgement));
     }
 }

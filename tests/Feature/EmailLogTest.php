@@ -377,7 +377,7 @@ class EmailLogTest extends TestCase
 
     private function log(array $overrides = []): EmailLog
     {
-        return EmailLog::query()->create(array_merge([
+        $attributes = array_merge([
             'mail_type' => EmailLog::TYPE_DONATION_RECEIPT,
             'recipient_name' => 'Penerima Log',
             'recipient_email' => 'recipient@example.test',
@@ -385,7 +385,16 @@ class EmailLogTest extends TestCase
             'status' => EmailLog::SENT,
             'attempted_at' => now(),
             'sent_at' => now(),
-        ], $overrides));
+        ], $overrides);
+        $createdAt = $attributes['created_at'] ?? null;
+        unset($attributes['created_at']);
+
+        $log = EmailLog::query()->create($attributes);
+        if ($createdAt) {
+            $log->forceFill(['created_at' => $createdAt, 'updated_at' => $createdAt])->saveQuietly();
+        }
+
+        return $log;
     }
 
     private function voucher(User $applicant, array $overrides = []): PaymentVoucher

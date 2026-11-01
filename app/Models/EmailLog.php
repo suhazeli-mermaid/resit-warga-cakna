@@ -38,6 +38,8 @@ class EmailLog extends Model
 
     public const TYPE_ACKNOWLEDGEMENT_COMPLETED_APPLICANT = 'voucher_acknowledgement_completed_applicant';
 
+    public const TYPE_ACKNOWLEDGEMENT_COMPLETED_ADMIN = 'voucher_acknowledgement_completed_admin';
+
     public const TYPE_PASSWORD_RESET = 'password_reset';
 
     public const TYPE_EMAIL_VERIFICATION = 'email_verification';
@@ -142,6 +144,7 @@ class EmailLog extends Model
             self::TYPE_ACKNOWLEDGEMENT_REQUEST => 'Pautan Akuan Penerimaan',
             self::TYPE_ACKNOWLEDGEMENT_COMPLETED_RECIPIENT => 'Akuan Selesai — Penerima',
             self::TYPE_ACKNOWLEDGEMENT_COMPLETED_APPLICANT => 'Akuan Selesai — Pemohon',
+            self::TYPE_ACKNOWLEDGEMENT_COMPLETED_ADMIN => 'Akuan Selesai — Admin',
             self::TYPE_PASSWORD_RESET => 'Tetapan Semula Kata Laluan',
             self::TYPE_EMAIL_VERIFICATION => 'Pengesahan Alamat E-mel',
         ];
